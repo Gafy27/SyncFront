@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sync – Dashboard</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-neutral-100 text-neutral-900">
+
+  <!-- Layout general -->
+  <div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-neutral-200 p-6 flex flex-col">
+      <div class="text-2xl font-bold tracking-tight mb-8 text-[#0458ee]">
+        SYNC
+      </div>
+
+      <nav class="space-y-2">
+        <a class="flex items-center gap-3 px-3 py-2 bg-neutral-100 rounded-lg font-medium" href="#">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 text-[#0458ee]"></i>
+          Dashboard
+        </a>
+
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100" href="#">
+          <i data-lucide="cpu" class="w-5 h-5 text-neutral-500"></i>
+          Dispositivos
+        </a>
+
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100" href="#">
+          <i data-lucide="radio" class="w-5 h-5 text-neutral-500"></i>
+          Gateways
+        </a>
+
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100" href="#">
+          <i data-lucide="boxes" class="w-5 h-5 text-neutral-500"></i>
+          Aplicaciones
+        </a>
+
+        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-100" href="#">
+          <i data-lucide="settings" class="w-5 h-5 text-neutral-500"></i>
+          Administración
+        </a>
+      </nav>
+
+      <div class="mt-auto pt-8 text-sm text-neutral-400">
+        © 2025 Autentio – Sync
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-10">
+
+      <!-- Breadcrumb -->
+      <div class="text-sm text-neutral-500 mb-6">
+        SYNC / <span class="text-neutral-800">Dashboard General</span>
+      </div>
+
+      <!-- Título -->
+      <h1 class="text-3xl font-semibold mb-8">
+        Vista General
+      </h1>
+
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+
+        <!-- Card -->
+        <div class="bg-white p-6 rounded-xl shadow border border-neutral-200">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-neutral-500">Dispositivos Activos</p>
+            <i data-lucide="cpu" class="w-5 h-5 text-green-600"></i>
+          </div>
+          <p class="text-4xl font-semibold mt-4">128</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow border border-neutral-200">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-neutral-500">Gateways Conectados</p>
+            <i data-lucide="radio" class="w-5 h-5 text-blue-600"></i>
+          </div>
+          <p class="text-4xl font-semibold mt-4">14</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow border border-neutral-200">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-neutral-500">Eventos (Última hora)</p>
+            <i data-lucide="activity" class="w-5 h-5 text-purple-600"></i>
+          </div>
+          <p class="text-4xl font-semibold mt-4">12.532</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow border border-neutral-200">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-neutral-500">Promedio por dispositivo</p>
+            <i data-lucide="package" class="w-5 h-5 text-orange-600"></i>
+          </div>
+          <p class="text-4xl font-semibold mt-4">485</p>
+        </div>
+
+      </div>
+
+      <!-- Chart Placeholder -->
+      <div class="bg-white p-6 rounded-xl shadow border border-neutral-200 mb-10">
+        <h2 class="text-xl font-semibold mb-4">Flujo de Mensajes (últimas 24h)</h2>
+
+        <div class="w-full h-64 bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-400 text-sm">
+          [ Aquí va el gráfico real — Chart.js / ECharts / Recharts ]
+        </div>
+      </div>
+
+      <!-- Tabla de eventos recientes -->
+      <div class="bg-white p-6 rounded-xl shadow border border-neutral-200">
+        <h2 class="text-xl font-semibold mb-4">Eventos recientes</h2>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-neutral-50 border-b border-neutral-200">
+              <tr>
+                <th class="text-left py-3 px-4 font-medium text-neutral-600">Hora</th>
+                <th class="text-left py-3 px-4 font-medium text-neutral-600">Dispositivo</th>
+                <th class="text-left py-3 px-4 font-medium text-neutral-600">Tipo</th>
+                <th class="text-left py-3 px-4 font-medium text-neutral-600">Payload</th>
+                <th class="text-left py-3 px-4 font-medium text-neutral-600">Gateway</th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-neutral-200">
+              <tr class="hover:bg-neutral-50">
+                <td class="py-3 px-4">13:42:01</td>
+                <td class="py-3 px-4 font-medium text-neutral-900">CNC003</td>
+                <td class="py-3 px-4 text-blue-600">uplink</td>
+                <td class="py-3 px-4">36B</td>
+                <td class="py-3 px-4">GATE-12</td>
+              </tr>
+
+              <tr class="hover:bg-neutral-50">
+                <td class="py-3 px-4">13:41:54</td>
+                <td class="py-3 px-4 font-medium text-neutral-900">CNC005</td>
+                <td class="py-3 px-4 text-blue-600">uplink</td>
+                <td class="py-3 px-4">28B</td>
+                <td class="py-3 px-4">GATE-09</td>
+              </tr>
+
+              <tr class="hover:bg-neutral-50">
+                <td class="py-3 px-4">13:41:50</td>
+                <td class="py-3 px-4 font-medium text-neutral-900">NODE-8821</td>
+                <td class="py-3 px-4 text-green-600">status</td>
+                <td class="py-3 px-4">—</td>
+                <td class="py-3 px-4">GATE-07</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+
+</body>
+</html>
+basandote en este html, completalo para hacer un dashboard de administrador de una plataforma llamada sync, la cual tiene este logo
