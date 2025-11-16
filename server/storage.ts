@@ -1,37 +1,47 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type Device, type Gateway, type Event, type Application, type AiModel } from "@shared/schema";
 import { randomUUID } from "crypto";
 
-// modify the interface with any CRUD methods
-// you might need
-
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getDevices(): Promise<Device[]>;
+  getGateways(): Promise<Gateway[]>;
+  getEvents(): Promise<Event[]>;
+  getApplications(): Promise<Application[]>;
+  getAiModels(): Promise<AiModel[]>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+  private devices: Map<string, Device>;
+  private gateways: Map<string, Gateway>;
+  private events: Map<string, Event>;
+  private applications: Map<string, Application>;
+  private aiModels: Map<string, AiModel>;
 
   constructor() {
-    this.users = new Map();
+    this.devices = new Map();
+    this.gateways = new Map();
+    this.events = new Map();
+    this.applications = new Map();
+    this.aiModels = new Map();
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getDevices(): Promise<Device[]> {
+    return Array.from(this.devices.values());
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getGateways(): Promise<Gateway[]> {
+    return Array.from(this.gateways.values());
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getEvents(): Promise<Event[]> {
+    return Array.from(this.events.values());
+  }
+
+  async getApplications(): Promise<Application[]> {
+    return Array.from(this.applications.values());
+  }
+
+  async getAiModels(): Promise<AiModel[]> {
+    return Array.from(this.aiModels.values());
   }
 }
 
