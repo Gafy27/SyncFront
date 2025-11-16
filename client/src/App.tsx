@@ -9,6 +9,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import Dashboard from "@/pages/dashboard";
 import Devices from "@/pages/devices";
 import Gateways from "@/pages/gateways";
+import Connectors from "@/pages/connectors";
 import Applications from "@/pages/applications";
 import AiModels from "@/pages/ai-models";
 import Admin from "@/pages/admin";
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/devices" component={Devices} />
       <Route path="/gateways" component={Gateways} />
+      <Route path="/connectors" component={Connectors} />
       <Route path="/applications" component={Applications} />
       <Route path="/ai-models" component={AiModels} />
       <Route path="/admin" component={Admin} />

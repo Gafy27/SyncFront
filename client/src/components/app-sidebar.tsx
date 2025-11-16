@@ -1,4 +1,4 @@
-import { LayoutDashboard, Cpu, Radio, Boxes, Brain, Settings } from "lucide-react";
+import { LayoutDashboard, Cpu, Radio, Boxes, Brain, Settings, Cable } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -27,6 +27,11 @@ const menuItems = [
     title: "Gateways",
     url: "/gateways",
     icon: Radio,
+  },
+  {
+    title: "Conectores",
+    url: "/connectors",
+    icon: Cable,
   },
   {
     title: "Aplicaciones",
