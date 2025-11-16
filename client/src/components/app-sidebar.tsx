@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import syncLogo from "@assets/SyncLogo_1763335524409.png";
+import syncLogo from "@assets/SyncLogoWhite_1763336721079.png";
 
 const menuItems = [
   {
@@ -57,7 +57,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent className="p-6">
         <div className="mb-8">
-          <img src={syncLogo} alt="Sync" className="h-8 w-auto" />
+          <img src={syncLogo} alt="Sync" className="h-16 w-auto dark:invert-0 invert" />
         </div>
         <SidebarGroup>
           <SidebarGroupContent>
