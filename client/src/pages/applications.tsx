@@ -29,7 +29,7 @@ const mockApplications = [
     status: "active",
     description: "Sistema de monitoreo de máquinas CNC",
     organization: "Autentio Manufacturing",
-    machines: 24,
+    machines: 25,
     eventClasses: 12,
     connectors: 6,
     functions: 8,
@@ -87,6 +87,15 @@ const mockMachines = [
     events: 8,
     connectors: ["Universal Robots", "MQTT"],
     applicationId: "3",
+  },
+  {
+    id: "4",
+    machineId: "cn5-mazak-2021",
+    name: "CN5",
+    status: "online",
+    events: 10,
+    connectors: ["Mazak", "MQTT"],
+    applicationId: "1",
   },
 ];
 
