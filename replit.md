@@ -107,15 +107,17 @@ Ejemplos de clases:
 - Estado online/offline
 
 ### 6. Conectores (`/connectors`)
-- 14 conectores industriales disponibles
-- Protocolos: FANUC, HAAS, Siemens, ABB, Mazak, MQTT, Modbus, LoRa, DMG MORI, Okuma, KUKA, Yaskawa, Universal Robots, Rockwell
+- 14 conectores industriales disponibles con logos oficiales de marca
+- Protocolos: FANUC, HAAS, Siemens, ABB, Mazak, MQTT, Modbus, LoRa, DMG MORI, Okuma, KUKA, Yaskawa, Universal Robots, Rockwell Automation
 - Estado: Conectado/Desconectado
+- Búsqueda por nombre o protocolo
+- Diseño tipo Litmus-Edge con tarjetas de logos
 
 ### 7. Aplicaciones (`/applications`)
 - Vista de aplicaciones con métricas
 - Al hacer clic: Tabs con flujos
-  - **Máquinas**: Lista de máquinas con eventos
-  - **Conectores**: Conectores vinculados
+  - **Máquinas**: Lista de máquinas con eventos (navegable a detalle)
+  - **Conectores**: Grid de conectores vinculados al estilo Litmus-Edge con logos, protocolo y estado. Incluye botón para vincular nuevos conectores
   - **Clases de Eventos**: Definiciones de tipos de eventos
   - **Funciones**: Procesamiento de datos
 
@@ -177,10 +179,13 @@ Servicios de la red: NetworkManager, MQTTBridgeService, StreamNormalizer, Stream
 ## Estado Actual
 ✅ Estructura jerárquica completa (Organizaciones → Aplicaciones → Flujos)
 ✅ Formulario completo de registro de máquinas
-✅ 14 conectores industriales
+✅ 14 conectores industriales con logos oficiales actualizados
+✅ Tab de conectores en aplicaciones con diseño tipo Litmus-Edge
 ✅ Sistema de clases de eventos
 ✅ Schema completo con todos los modelos
 ✅ Navegación actualizada
+✅ Página de detalle de máquina con imagen de robot
+✅ Logos de Sync actualizados (dark/light mode)
 
 ## Notas de Desarrollo
 - Este es un **mockup/prototipo** - NO hay funcionalidad backend real
