@@ -1,0 +1,35 @@
+network-manager:
+  class: NetworkManager
+  timeout_seconds: 30
+  check_interval: 5
+  broker: kafka
+  consumer_group: network-manager
+  log_level: INFO
+
+mqtt-bridge:
+  class: MQTTBridgeService
+  broker: kafka
+  consumer_group: mqtt-bridge
+  log_level: INFO
+
+stream-normalizer:
+  class: StreamNormalizer
+  broker: kafka
+  consumer_group: stream-normalizer
+  log_level: INFO
+
+stream-interpreter:
+  class: StreamInterpreter
+  broker: kafka
+  consumer_group: stream-interpreter
+  log_level: INFO
+
+rewind:
+  class: Rewind
+  broker: kafka
+  consumer_group: rewind
+  log_level: INFO
+
+
+storage:
+  type: redis

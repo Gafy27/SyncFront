@@ -1,0 +1,25 @@
+{
+  "machine_id": "24e124454e282635",
+  "events": [
+    {
+      "id": "adc_1",
+      "label": "level_420",
+      "class": "adc_420"
+    },
+    {
+      "id": "EDIT",
+      "class": "ONLINE"
+    }
+  ],    
+
+    "properties": {
+        "id_type": "EUI",
+        "denomination": "Prueba Nodo Capsa 1",
+        "max_tank_volume": 2500,
+        "pq": "BIOC 16113",
+        "og_field":"CAPSA",
+        "location": "PLANTA SUR",
+        "work_mode": "Batcheo"
+    }
+
+}

@@ -1,0 +1,79 @@
+mqtt:
+    host: "arweb.aerre.com.ar"
+    port: 1883
+    topics:
+        - name: "test/milesight/uplink"
+          decoder: "processors.decode.custom.UC50XD_Decoder"
+        - name: "dosivac-api__dev"
+          decoder: "processors.decode.api."
+    max_message_interval: 5
+    update_interval: 30
+    
+kafka:
+    url: "broker:29092"
+    log_level: "INFO"
+    offset: "latest"
+    consumer_group: "internal"
+
+kafka_local:
+    url: "localhost:9092"
+    log_level: "INFO"
+    offset: "latest"
+    consumer_group: "local"
+
+http:
+    timeout: 30
+    retries: 3
+    retry_delay: 1
+
+auth0:
+    url: "https://dev-gj5sc4b5awd3ww3w.us.auth0.com"
+    client_id: "Y30MzcRCIVe9BtL2OxAl9txs2BP9fFpZ"
+    client_secret: ""  # Set via AUTH0_CLIENT_SECRET environment variable
+    audience: "testing.api.dosivac.autentio.app"
+    config_url: "https://testing.api.dosivac.autentio.app"
+
+
+rewind_influxdb:
+    url: "https://us-east-1-1.aws.cloud2.influxdata.com"
+    token: "QqnUTxD-5SIasyTlEVqW8tW4e_sOSOtT3dgWxLYDBgH2jmFmYAg5fi0E4e9395kUTeqUyN5hbuPXhEWbumDmgA=="
+    org: "Dosivac"
+
+timescaledb_cloud:
+    host: "vrk5pp6nai.jhp1i300t5.tsdb.cloud.timescale.com"
+    port: 37822
+    user: "tsdbadmin"
+    password: "t20ch182m6fuicu0"
+    dbname: "tsdb"
+
+timescaledb:
+    host: "192.168.0.245"
+    port: 5432
+    user: "juan"
+    password: "UegU9Wg7WXWXi"
+    dbname: "test"
+
+redis:
+    host: "redis"
+    port: 6379
+    db: 0  # Redis database number (0-15), each database is isolated
+    socket_timeout: 30.0
+    decode_responses: True
+
+redis_local:
+    host: "localhost"
+    port: 6379
+    db: 0  # Redis database number (0-15), each database is isolated
+    socket_timeout: 30.0
+    decode_responses: True
+
+
+topics:
+    network-manager: "network-manager"
+    input_topic: "input"
+    output_topic: "output"
+    accepted_topic: "accepted"
+    debug_topic: "debug-topic"
+    beacon_topic: "beacon"
+    interpreted_topic: "interpreted"
+    config_topic: "config"

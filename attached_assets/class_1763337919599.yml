@@ -1,0 +1,86 @@
+event_class:
+  - class: EXECUTION
+    topic: accepted
+    type: STR
+    auth_values:
+      - "ACTIVE"
+      - "STOPPED"
+      - "PROGRAM_STOPPED"
+      - "OPTIONAL_STOP"
+      - "FEED_HOLD"
+      - "READY"
+      - "UNAVAILABLE"
+      - "STOP"
+
+  - class: MODE
+    topic: accepted 
+    type: STR
+    auth_values:
+      - "EDIT"
+      - "MANUAL"
+      - "MANUAL_DATA_INPUT"
+      - "AUTOMATIC"
+      - "UNAVAILABLE"
+      - "REF"
+
+  - class: PIECES
+    topic: accepted
+    type: STR
+    auth_values:
+      - "ON"
+      - "OFF"
+
+  - class: ONLINE
+    topic: accepted
+    type: STR
+    auth_values:
+      - "TRUE"
+      - "FALSE"
+
+  - class: OP_CODE
+    topic: accepted
+    type: STR
+    auth_values:
+      - ANY
+    contain_values:
+      - "D-"
+      - "C-"
+
+  - class: ACTIVITY
+    topic: accepted
+    type: STR
+    auth_values:
+      - "JOB_SETUP"
+      - "PROGRAM_SETUP"
+      - "PROGRAM_UPDATE"
+      - "MANTEINANCE"
+      - "OPERATOR_BREAK"
+      - "CYCLE_SETUP"
+      - "CYCLE_RUN"
+
+  - class: OPERATION
+    topic: accepted
+    type: STR
+    auth_values:
+      - "SETUP"
+      - "PRODUCTION"
+
+  - class: adc_420
+    topic: accepted
+    type: FLOAT
+    values_range: 
+      - (4.1,19.9)
+
+  - class: adc_010
+    topic: accepted
+    type: FLOAT
+    values_range: 
+      - (0,10.0)
+      
+  - class: CONFIG
+    topic: config
+    type: STR
+    auth_values:
+      - "CREATED"
+      - "UPDATED"
+      - "DELETED"

@@ -7,10 +7,14 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import Dashboard from "@/pages/dashboard";
+import Organizations from "@/pages/organizations";
+import Users from "@/pages/users";
 import Devices from "@/pages/devices";
 import Gateways from "@/pages/gateways";
+import Edges from "@/pages/edges";
 import Connectors from "@/pages/connectors";
 import Applications from "@/pages/applications";
+import NewMachine from "@/pages/machines-new";
 import AiModels from "@/pages/ai-models";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
@@ -19,10 +23,14 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/organizations" component={Organizations} />
+      <Route path="/users" component={Users} />
       <Route path="/devices" component={Devices} />
       <Route path="/gateways" component={Gateways} />
+      <Route path="/edges" component={Edges} />
       <Route path="/connectors" component={Connectors} />
       <Route path="/applications" component={Applications} />
+      <Route path="/machines/new" component={NewMachine} />
       <Route path="/ai-models" component={AiModels} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />

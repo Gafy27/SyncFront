@@ -1,10 +1,11 @@
-import { LayoutDashboard, Cpu, Radio, Boxes, Brain, Settings, Cable } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -19,9 +20,14 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Dispositivos",
-    url: "/devices",
-    icon: Cpu,
+    title: "Organizaciones",
+    url: "/organizations",
+    icon: Building2,
+  },
+  {
+    title: "Usuarios",
+    url: "/users",
+    icon: Users,
   },
   {
     title: "Gateways",
@@ -29,9 +35,9 @@ const menuItems = [
     icon: Radio,
   },
   {
-    title: "Conectores",
-    url: "/connectors",
-    icon: Cable,
+    title: "Edges",
+    url: "/edges",
+    icon: Server,
   },
   {
     title: "Aplicaciones",
@@ -60,6 +66,7 @@ export function AppSidebar() {
           <img src={syncLogo} alt="Sync" className="h-16 w-auto dark:invert-0 invert" />
         </div>
         <SidebarGroup>
+          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -78,12 +85,13 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarFooter className="mt-auto pt-8">
-          <div className="text-xs text-muted-foreground">
-            © 2025 Autentio – Sync
-          </div>
-        </SidebarFooter>
       </SidebarContent>
+      <SidebarFooter className="p-6">
+        <div className="text-xs text-muted-foreground">
+          <div className="font-medium">Autentio IoT Platform</div>
+          <div className="mt-1">v1.0.0</div>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
