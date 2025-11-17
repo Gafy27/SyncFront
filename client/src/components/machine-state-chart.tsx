@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 interface StateSegment {
   start: number;
   end: number;
@@ -8,11 +6,10 @@ interface StateSegment {
 }
 
 interface MachineStateChartProps {
-  title?: string;
   className?: string;
 }
 
-export function MachineStateChart({ title = "Estado de Máquina", className }: MachineStateChartProps) {
+export function MachineStateChart({ className }: MachineStateChartProps) {
   const timeLabels = ["07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30"];
   
   const stateSegments: StateSegment[] = [
@@ -32,12 +29,8 @@ export function MachineStateChart({ title = "Estado de Máquina", className }: M
   ];
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-base">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+    <div className={className}>
+      <div className="space-y-4">
           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
             {timeLabels.map((label, idx) => (
               <span key={idx}>{label}</span>
@@ -129,8 +122,7 @@ export function MachineStateChart({ title = "Estado de Máquina", className }: M
               </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
