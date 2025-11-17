@@ -6,6 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
 
+import rockwellLogo from "@assets/image_1763374687620.png";
+import abbLogo from "@assets/image_1763374691784.png";
+import urLogo from "@assets/image_1763374694281.png";
+import yaskawaLogo from "@assets/image_1763374696992.png";
+import kukaLogo from "@assets/image_1763374699984.png";
+import siemensLogo from "@assets/image_1763374701698.png";
+import okumaLogo from "@assets/image_1763374704682.png";
+import mqttLogo from "@assets/image_1763374706458.png";
+import moriLogo from "@assets/image_1763374710638.png";
+import modbusLogo from "@assets/image_1763374713069.png";
+import mazakLogo from "@assets/image_1763374716014.png";
+import loraLogo from "@assets/image_1763374719130.png";
+import haasLogo from "@assets/image_1763374721742.png";
+import fanucLogo from "@assets/image_1763374725354.png";
+
 const mockApplications = [
   {
     id: "1",
@@ -80,6 +95,29 @@ const mockEventClasses = [
   { id: "2", className: "MODE", topic: "accepted", type: "STR", authValues: 6 },
   { id: "3", className: "adc_420", topic: "accepted", type: "FLOAT", authValues: 0 },
 ];
+
+const allConnectors = [
+  { id: "fanuc", name: "FANUC", logo: fanucLogo, protocol: "CNC Protocol" },
+  { id: "haas", name: "HAAS", logo: haasLogo, protocol: "CNC Protocol" },
+  { id: "siemens", name: "Siemens", logo: siemensLogo, protocol: "PLC Protocol" },
+  { id: "abb", name: "ABB", logo: abbLogo, protocol: "Robot Controller" },
+  { id: "mazak", name: "Mazak", logo: mazakLogo, protocol: "Machine Tool" },
+  { id: "mqtt", name: "MQTT", logo: mqttLogo, protocol: "IoT Protocol" },
+  { id: "modbus", name: "Modbus", logo: modbusLogo, protocol: "Industrial Protocol" },
+  { id: "lora", name: "LoRa", logo: loraLogo, protocol: "Wireless Protocol" },
+  { id: "dmg-mori", name: "DMG MORI", logo: moriLogo, protocol: "CNC Protocol" },
+  { id: "okuma", name: "Okuma", logo: okumaLogo, protocol: "CNC Protocol" },
+  { id: "kuka", name: "KUKA", logo: kukaLogo, protocol: "Robot Controller" },
+  { id: "yaskawa", name: "Yaskawa", logo: yaskawaLogo, protocol: "Motion Control" },
+  { id: "universal-robots", name: "Universal Robots", logo: urLogo, protocol: "Cobot Controller" },
+  { id: "rockwell", name: "Rockwell Automation", logo: rockwellLogo, protocol: "PLC Protocol" },
+];
+
+const mockAppConnectors: Record<string, string[]> = {
+  "1": ["fanuc", "haas", "siemens", "mqtt", "modbus", "mazak"],
+  "2": ["abb", "kuka", "mqtt", "modbus"],
+  "3": ["universal-robots", "mqtt"],
+};
 
 export default function Applications() {
   const [applications] = useState(mockApplications);
@@ -251,16 +289,60 @@ export default function Applications() {
             </TabsContent>
 
             <TabsContent value="connectors">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold">Conectores</h2>
                 <Button data-testid="button-link-connector">
                   <Plus className="w-4 h-4 mr-2" />
                   Vincular Conector
                 </Button>
               </div>
-              <p className="text-muted-foreground">
-                Conectores vinculados a esta aplicación
-              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {selectedApp && mockAppConnectors[selectedApp]?.map((connectorId) => {
+                  const connector = allConnectors.find(c => c.id === connectorId);
+                  if (!connector) return null;
+                  
+                  return (
+                    <Card key={connector.id} className="hover-elevate" data-testid={`card-app-connector-${connector.id}`}>
+                      <CardContent className="p-6">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-full h-20 flex items-center justify-center bg-card rounded-lg">
+                            <img 
+                              src={connector.logo} 
+                              alt={connector.name} 
+                              className="max-w-full max-h-full object-contain p-2"
+                              data-testid={`img-connector-logo-${connector.id}`}
+                            />
+                          </div>
+                          <div className="w-full text-center space-y-1">
+                            <h3 className="font-semibold text-sm">{connector.name}</h3>
+                            <p className="text-xs text-muted-foreground">{connector.protocol}</p>
+                          </div>
+                          <Badge 
+                            variant="default"
+                            className="bg-green-100 text-green-700 border-green-200 w-full justify-center"
+                          >
+                            Conectado
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+                
+                <Card 
+                  className="border-2 border-dashed hover-elevate cursor-pointer" 
+                  data-testid="card-add-connector-to-app"
+                >
+                  <CardContent className="p-6 h-full flex flex-col items-center justify-center text-center space-y-3">
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
+                      <Plus className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Vincular Conector
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="classes">

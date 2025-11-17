@@ -5,20 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
-import fanucLogo from "@assets/Fanuc_logo.svg_1763336344617.png";
-import haasLogo from "@assets/images_1763336344617.png";
-import loraLogo from "@assets/lora_1763336344617.png";
-import mazakLogo from "@assets/mazak_1763336344617.png";
-import modbusLogo from "@assets/modbus_1763336344617.png";
-import moriLogo from "@assets/mori_1763336344617.png";
-import mqttLogo from "@assets/mqtt_1763336344617.png";
-import okumaLogo from "@assets/okuma__logo_1763336344617.png";
-import siemensLogo from "@assets/Siemens_AG_logo.svg_1763336344617.png";
-import kukaLogo from "@assets/image_1763336378670.png";
-import yaskawaLogo from "@assets/image_1763336396813.png";
-import urLogo from "@assets/image_1763336421270.png";
-import abbLogo from "@assets/image_1763336527928.png";
-import rockwellLogo from "@assets/image_1763336585284.png";
+import rockwellLogo from "@assets/image_1763374687620.png";
+import abbLogo from "@assets/image_1763374691784.png";
+import urLogo from "@assets/image_1763374694281.png";
+import yaskawaLogo from "@assets/image_1763374696992.png";
+import kukaLogo from "@assets/image_1763374699984.png";
+import siemensLogo from "@assets/image_1763374701698.png";
+import okumaLogo from "@assets/image_1763374704682.png";
+import mqttLogo from "@assets/image_1763374706458.png";
+import moriLogo from "@assets/image_1763374710638.png";
+import modbusLogo from "@assets/image_1763374713069.png";
+import mazakLogo from "@assets/image_1763374716014.png";
+import loraLogo from "@assets/image_1763374719130.png";
+import haasLogo from "@assets/image_1763374721742.png";
+import fanucLogo from "@assets/image_1763374725354.png";
 
 const connectors = [
   { id: "fanuc", name: "FANUC", logo: fanucLogo, status: "connected", protocol: "CNC Protocol" },
