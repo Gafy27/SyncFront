@@ -15,6 +15,7 @@ import Edges from "@/pages/edges";
 import Connectors from "@/pages/connectors";
 import Applications from "@/pages/applications";
 import NewMachine from "@/pages/machines-new";
+import MachineDetail from "@/pages/machine-detail";
 import AiModels from "@/pages/ai-models";
 import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/connectors" component={Connectors} />
       <Route path="/applications" component={Applications} />
       <Route path="/machines/new" component={NewMachine} />
+      <Route path="/machines/:id" component={MachineDetail} />
       <Route path="/ai-models" component={AiModels} />
       <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
