@@ -1,7 +1,9 @@
-import { Cpu, Radio, Activity, Package } from "lucide-react";
+import { Cpu, Radio, Activity, AlertTriangle } from "lucide-react";
 import { KpiCard } from "@/components/kpi-card";
 import { MessageFlowChart } from "@/components/message-flow-chart";
 import { EventsTable } from "@/components/events-table";
+import { UsageStatistics } from "@/components/usage-statistics";
+import { AlarmsTable } from "@/components/alarms-table";
 
 const mockChartData = [
   { time: "00:00", messages: 450 },
@@ -90,19 +92,27 @@ export default function Dashboard() {
           testId="card-events-hour"
         />
         <KpiCard 
-          title="Promedio por dispositivo" 
-          value={485} 
-          icon={Package} 
-          iconColor="text-orange-600"
-          testId="card-avg-device"
+          title="Dispositivos en Alarma" 
+          value={5} 
+          icon={AlertTriangle} 
+          iconColor="text-red-600"
+          testId="card-devices-alarm"
         />
+      </div>
+
+      <div className="mb-10">
+        <UsageStatistics />
       </div>
 
       <div className="mb-10">
         <MessageFlowChart data={mockChartData} />
       </div>
 
-      <EventsTable events={mockEvents} />
+      <div className="mb-10">
+        <EventsTable events={mockEvents} />
+      </div>
+
+      <AlarmsTable />
     </div>
   );
 }
