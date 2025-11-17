@@ -1,9 +1,8 @@
 import { useRoute, useLocation } from "wouter";
-import { ArrowLeft, Cpu } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RobotPositionChart } from "@/components/robot-position-chart";
 import robotImage from "@assets/hcr5_1763338650795.png";
 
 const mockMachineDetails = {
@@ -112,7 +111,7 @@ export default function MachineDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
           <Card>
             <CardContent className="p-6">
               <img 
@@ -121,6 +120,39 @@ export default function MachineDetail() {
                 className="w-full h-auto"
                 data-testid="img-robot"
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Monitoreo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-3">
+                <Badge 
+                  variant="default"
+                  className="bg-green-100 text-green-700 border-green-200 w-full justify-center py-3 text-base"
+                  data-testid="badge-connected"
+                >
+                  Conectado
+                </Badge>
+                {machine.isMoving && (
+                  <Badge 
+                    variant="default"
+                    className="bg-blue-100 text-blue-700 border-blue-200 w-full justify-center py-3 text-base"
+                    data-testid="badge-moving"
+                  >
+                    En Movimiento
+                  </Badge>
+                )}
+                <Badge 
+                  variant="secondary"
+                  className="w-full justify-center py-3 text-base"
+                  data-testid="badge-uptime"
+                >
+                  Tiempo en Funcionamiento
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -160,104 +192,51 @@ export default function MachineDetail() {
             </CardContent>
           </Card>
 
-          {machine.id === "3" && <RobotPositionChart />}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Información Máquina</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">ID</div>
-                  <div className="font-mono text-sm" data-testid="text-machine-id">{machine.machineId}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Conector</div>
-                  <Badge variant="secondary">{machine.connector}</Badge>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground mb-1">Eventos</div>
-                  <div className="flex flex-wrap gap-1">
-                    {machine.events.slice(0, 3).map((event, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs">
-                        {event}
-                      </Badge>
-                    ))}
-                    {machine.events.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{machine.events.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Monitoreo</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Información</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-3">
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">Red</div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground min-w-[60px]">IP</span>
-                        <span className="font-mono text-sm" data-testid="text-ip">{machine.network.ip}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground min-w-[60px]">PUERTO</span>
-                        <span className="font-mono text-sm">{machine.network.port}</span>
-                      </div>
+                  <h3 className="font-semibold text-sm">Datos de Red</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">IP</div>
+                      <div className="font-mono text-sm" data-testid="text-ip">{machine.network.ip}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-1">PUERTO</div>
+                      <div className="font-mono text-sm">{machine.network.port}</div>
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Badge 
-                    variant="default"
-                    className="bg-green-100 text-green-700 border-green-200"
-                    data-testid="badge-connected"
-                  >
-                    Conectado
-                  </Badge>
-                  {machine.isMoving && (
-                    <Badge 
-                      variant="default"
-                      className="bg-blue-100 text-blue-700 border-blue-200"
-                      data-testid="badge-moving"
-                    >
-                      En Movimiento
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Orden de Trabajo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="font-mono text-sm" data-testid="text-work-order">
-                  {machine.workOrder}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm">Orden de Trabajo</h3>
+                  <div className="font-mono text-sm" data-testid="text-work-order">
+                    {machine.workOrder}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Aplicación</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-muted-foreground" />
-                  <span data-testid="text-application">{machine.application}</span>
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm">Propiedades</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-muted-foreground text-xs">Conector:</span>
+                      <div className="mt-1">
+                        <Badge variant="secondary" className="text-xs">{machine.connector}</Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground text-xs">ID:</span>
+                      <div className="font-mono text-xs mt-1" data-testid="text-machine-id">{machine.machineId}</div>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
