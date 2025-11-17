@@ -31,6 +31,18 @@ const mockApplications = [
     connectors: 4,
     functions: 5,
   },
+  {
+    id: "3",
+    name: "RoboSync",
+    type: "Robotics",
+    status: "active",
+    description: "Control y monitoreo de robots colaborativos",
+    organization: "Autentio Robotics",
+    machines: 1,
+    eventClasses: 6,
+    connectors: 2,
+    functions: 3,
+  },
 ];
 
 const mockMachines = [
@@ -41,6 +53,7 @@ const mockMachines = [
     status: "online",
     events: 15,
     connectors: ["FANUC", "MQTT"],
+    applicationId: "1",
   },
   {
     id: "2",
@@ -49,6 +62,16 @@ const mockMachines = [
     status: "online",
     events: 12,
     connectors: ["Siemens", "MQTT"],
+    applicationId: "1",
+  },
+  {
+    id: "3",
+    machineId: "celda01-hcr5-2024",
+    name: "Celda-01",
+    status: "online",
+    events: 8,
+    connectors: ["Universal Robots", "MQTT"],
+    applicationId: "3",
   },
 ];
 
@@ -183,8 +206,15 @@ export default function Applications() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockMachines.map((machine) => (
-                  <Card key={machine.id} className="hover-elevate" data-testid={`card-machine-${machine.id}`}>
+                {mockMachines
+                  .filter((m) => m.applicationId === selectedApp)
+                  .map((machine) => (
+                  <Card 
+                    key={machine.id} 
+                    className="hover-elevate cursor-pointer" 
+                    onClick={() => setLocation(`/machines/${machine.id}`)}
+                    data-testid={`card-machine-${machine.id}`}
+                  >
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div>

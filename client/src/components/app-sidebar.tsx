@@ -11,7 +11,8 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import syncLogo from "@assets/SyncLogoWhite_1763336721079.png";
+import syncLogoWhite from "@assets/Logo Nutria Sync(1)_1763339643787.png";
+import syncLogoDark from "@assets/Logo Nutria Sync_1763339643787.png";
 
 const menuItems = [
   {
@@ -63,7 +64,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent className="p-6">
         <div className="mb-8">
-          <img src={syncLogo} alt="Sync" className="h-16 w-auto dark:invert-0 invert" />
+          <img src={syncLogoWhite} alt="Sync" className="h-12 w-auto dark:block hidden" />
+          <img src={syncLogoDark} alt="Sync" className="h-12 w-auto dark:hidden block" />
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
