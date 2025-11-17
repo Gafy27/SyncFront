@@ -3,6 +3,7 @@ import { ArrowLeft, Cpu } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { RobotPositionChart } from "@/components/robot-position-chart";
 import robotImage from "@assets/hcr5_1763338650795.png";
 
 const mockMachineDetails = {
@@ -158,6 +159,8 @@ export default function MachineDetail() {
               </div>
             </CardContent>
           </Card>
+
+          {machine.id === "3" && <RobotPositionChart />}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
