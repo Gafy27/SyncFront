@@ -64,8 +64,8 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent className="p-6">
         <div className="mb-8">
-          <img src={syncLogoWhite} alt="Sync" className="h-12 w-auto dark:block hidden" />
-          <img src={syncLogoDark} alt="Sync" className="h-12 w-auto dark:hidden block" />
+          <img src={syncLogoWhite} alt="Sync" className="h-24 w-auto dark:block hidden" />
+          <img src={syncLogoDark} alt="Sync" className="h-24 w-auto dark:hidden block" />
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>
