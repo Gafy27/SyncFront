@@ -185,7 +185,9 @@ Servicios de la red: NetworkManager, MQTTBridgeService, StreamNormalizer, Stream
 ✅ Schema completo con todos los modelos
 ✅ Navegación actualizada
 ✅ Página de detalle de máquina con imagen de robot
-✅ Logos de Sync actualizados (dark/light mode)
+✅ Logos de Sync actualizados (dark/light mode) - altura duplicada (96px)
+✅ Dashboard mejorado con estadísticas de uso (sliders) y tabla de alarmas
+✅ Gráficos de posición en tiempo real para robot Celda-01 (3 ejes: X, Y, Z)
 
 ## Notas de Desarrollo
 - Este es un **mockup/prototipo** - NO hay funcionalidad backend real
