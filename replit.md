@@ -188,6 +188,7 @@ Servicios de la red: NetworkManager, MQTTBridgeService, StreamNormalizer, Stream
 ✅ Logos de Sync actualizados (dark/light mode) - altura duplicada (96px)
 ✅ Dashboard mejorado con estadísticas de uso (sliders) y tabla de alarmas
 ✅ Página de detalle de máquina reorganizada con layout de 2 columnas (imagen + monitoreo | eventos + información)
+✅ Página CN5 creada (Torno CNC Mazak QuickTurn 2021) con gráfico de estados, información específica de CNC
 
 ## Notas de Desarrollo
 - Este es un **mockup/prototipo** - NO hay funcionalidad backend real
