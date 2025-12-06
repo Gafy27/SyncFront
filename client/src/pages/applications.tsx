@@ -1,10 +1,19 @@
-import { useState } from "react";
-import { Plus, Boxes, Cpu, Cable, Tag, Code } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Plus, Boxes, Cpu, Cable, Tag, Code, Settings } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useOrganization } from "@/providers/organization-provider";
+import { useToast } from "@/hooks/use-toast";
+import { ApplicationMachinesTab } from "@/components/application-tabs/ApplicationMachinesTab";
+import { ApplicationConnectorsTab } from "@/components/application-tabs/ApplicationConnectorsTab";
+import { ApplicationEventClassesTab } from "@/components/application-tabs/ApplicationEventClassesTab";
+import { ApplicationFunctionsTab } from "@/components/application-tabs/ApplicationFunctionsTab";
+import { ApplicationConfigTab } from "@/components/application-tabs/ApplicationConfigTab";
 
 import rockwellLogo from "@assets/image_1763374687620.png";
 import abbLogo from "@assets/image_1763374691784.png";
@@ -21,89 +30,7 @@ import loraLogo from "@assets/image_1763374719130.png";
 import haasLogo from "@assets/image_1763374721742.png";
 import fanucLogo from "@assets/image_1763374725354.png";
 
-const mockApplications = [
-  {
-    id: "1",
-    name: "Smart Factory IoT",
-    type: "IoT Monitoring",
-    status: "active",
-    description: "Sistema de monitoreo de máquinas CNC",
-    organization: "Autentio Manufacturing",
-    machines: 25,
-    eventClasses: 12,
-    connectors: 6,
-    functions: 8,
-  },
-  {
-    id: "2",
-    name: "Warehouse Automation",
-    type: "Logistics",
-    status: "active",
-    description: "Automatización de almacén y robots",
-    organization: "Autentio Logistics",
-    machines: 15,
-    eventClasses: 8,
-    connectors: 4,
-    functions: 5,
-  },
-  {
-    id: "3",
-    name: "RoboSync",
-    type: "Robotics",
-    status: "active",
-    description: "Control y monitoreo de robots colaborativos",
-    organization: "Autentio Robotics",
-    machines: 1,
-    eventClasses: 6,
-    connectors: 2,
-    functions: 3,
-  },
-];
 
-const mockMachines = [
-  {
-    id: "1",
-    machineId: "24e124454e282635",
-    name: "CNC-001",
-    status: "online",
-    events: 15,
-    connectors: ["FANUC", "MQTT"],
-    applicationId: "1",
-  },
-  {
-    id: "2",
-    machineId: "35f235565f393746",
-    name: "CNC-002",
-    status: "online",
-    events: 12,
-    connectors: ["Siemens", "MQTT"],
-    applicationId: "1",
-  },
-  {
-    id: "3",
-    machineId: "celda01-hcr5-2024",
-    name: "Celda-01",
-    status: "online",
-    events: 8,
-    connectors: ["Universal Robots", "MQTT"],
-    applicationId: "3",
-  },
-  {
-    id: "4",
-    machineId: "cn5-mazak-2021",
-    name: "CN5",
-    status: "online",
-    events: 10,
-    connectors: ["Mazak", "MQTT"],
-    applicationId: "1",
-  },
-];
-
-const mockEventClasses = [
-  { id: "1", className: "EXECUTION", topic: "accepted", type: "STR", authValues: 8 },
-  { id: "2", className: "MODE", topic: "accepted", type: "STR", authValues: 6 },
-  { id: "3", className: "adc_420", topic: "accepted", type: "FLOAT", authValues: 0 },
-];
 
 const allConnectors = [
   { id: "fanuc", name: "FANUC", logo: fanucLogo, protocol: "CNC Protocol" },
@@ -122,20 +49,175 @@ const allConnectors = [
   { id: "rockwell", name: "Rockwell Automation", logo: rockwellLogo, protocol: "PLC Protocol" },
 ];
 
-const mockAppConnectors: Record<string, string[]> = {
+const initialAppConnectors: Record<string, string[]> = {
   "1": ["fanuc", "haas", "siemens", "mqtt", "modbus", "mazak"],
   "2": ["abb", "kuka", "mqtt", "modbus"],
   "3": ["universal-robots", "mqtt"],
 };
 
 export default function Applications() {
-  const [applications] = useState(mockApplications);
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
-  const [, setLocation] = useLocation();
+  const [locationPath, setLocation] = useLocation();
+  const [appConnectors, setAppConnectors] = useState<Record<string, string[]>>(initialAppConnectors);
+  const [configName, setConfigName] = useState("");
+  const [configDescription, setConfigDescription] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Read app query parameter from URL
+  const appFromQuery = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("app");
+  }, [locationPath]);
+
+  // Auto-select application from query parameter
+  useEffect(() => {
+    if (appFromQuery !== selectedApp) {
+      setSelectedApp(appFromQuery);
+    }
+  }, [appFromQuery]);
+
+  const { selectedOrg } = useOrganization();
+
+  // Fetch applications from API
+  const { data: applications = [], isLoading } = useQuery<any[]>({
+    queryKey: selectedOrg ? ['/api/organizations', selectedOrg, 'applications'] : ['applications-disabled'],
+    enabled: !!selectedOrg,
+  });
+
+  // Fetch machines for selected app
+  const { data: machines = [] } = useQuery<any[]>({
+    queryKey: selectedOrg && selectedApp ? ['/api/organizations', selectedOrg, 'applications', selectedApp, 'devices'] : ['machines-disabled'],
+    enabled: !!selectedOrg && !!selectedApp,
+  });
+
+  // Fetch event classes for selected app (needed for FunctionsTab)
+  const { data: eventClasses = [] } = useQuery<any[]>({
+    queryKey: selectedOrg && selectedApp ? ['/api/applications', selectedOrg, 'applications', selectedApp, 'event-classes'] : ['event-classes-disabled'],
+    enabled: !!selectedOrg && !!selectedApp,
+  });
+
+  // Fetch application details for config
+  const { data: applicationDetails } = useQuery<any>({
+    queryKey: selectedOrg && selectedApp ? ['/api/organizations', selectedOrg, 'applications', selectedApp] : ['app-details-disabled'],
+    enabled: !!selectedOrg && !!selectedApp,
+  });
+
+  // Initialize config form when application details load
+  useEffect(() => {
+    if (applicationDetails) {
+      setConfigName(applicationDetails.name || "");
+      setConfigDescription(applicationDetails.description || "");
+    }
+  }, [applicationDetails]);
 
   const handleNewMachine = () => {
-    setLocation("/machines/new");
+    if (selectedApp) {
+      setLocation(`/machines/new/${selectedApp}`);
+    } else {
+      setLocation("/machines/new");
+    }
   };
+
+  const handleSelectApplication = (appId: string) => {
+    setSelectedApp(appId);
+    setLocation(`/applications?app=${appId}`);
+  };
+
+  const handleBackToApplications = () => {
+    setSelectedApp(null);
+    setLocation("/applications");
+  };
+
+  const handleAddConnector = () => {
+    if (!selectedApp) {
+      return;
+    }
+    setLocation(`/connectors?linkApp=${selectedApp}`);
+  };
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem("connector-link");
+    if (pending) {
+      try {
+        const parsed = JSON.parse(pending);
+        if (parsed?.appId && parsed?.connectorId) {
+          setAppConnectors((prev) => {
+            const current = prev[parsed.appId] || [];
+            if (current.includes(parsed.connectorId)) {
+              return prev;
+            }
+            return {
+              ...prev,
+              [parsed.appId]: [...current, parsed.connectorId],
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Error applying connector link:", err);
+      } finally {
+        sessionStorage.removeItem("connector-link");
+      }
+    }
+  }, []);
+
+  // Mutation to update application config
+  const updateAppConfigMutation = useMutation({
+    mutationFn: async (updateData: { name: string; description: string }) => {
+      if (!selectedOrg || !selectedApp) {
+        throw new Error("Organización y aplicación deben estar seleccionadas");
+      }
+      const response = await apiRequest(
+        'PUT',
+        `/api/organizations/${selectedOrg}/applications/${selectedApp}`,
+        updateData
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['/api/organizations', selectedOrg, 'applications']
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/organizations', selectedOrg, 'applications', selectedApp]
+      });
+      toast({
+        title: "Éxito",
+        description: "Configuración de la aplicación actualizada correctamente",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Error al actualizar la configuración",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleSaveConfig = () => {
+    if (!configName.trim()) {
+      toast({
+        title: "Error",
+        description: "El nombre es requerido",
+        variant: "destructive",
+      });
+      return;
+    }
+    updateAppConfigMutation.mutate({
+      name: configName.trim(),
+      description: configDescription.trim(),
+    });
+  };
+
+  if (!selectedOrg) {
+    return (
+      <div className="p-10">
+        <p className="text-muted-foreground">Selecciona una organización para ver sus aplicaciones.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-10">
@@ -152,7 +234,10 @@ export default function Applications() {
             Gestiona las aplicaciones y sus flujos de datos
           </p>
         </div>
-        <Button data-testid="button-add-application">
+        <Button
+          data-testid="button-add-application"
+          onClick={() => setLocation("/applications/new")}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nueva Aplicación
         </Button>
@@ -160,64 +245,74 @@ export default function Applications() {
 
       {!selectedApp ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {applications.map((app) => (
-            <Card 
-              key={app.id} 
-              className="hover-elevate cursor-pointer" 
-              onClick={() => setSelectedApp(app.id)}
-              data-testid={`card-application-${app.id}`}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Boxes className="w-6 h-6 text-primary" />
+          {isLoading ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              Cargando aplicaciones...
+            </div>
+          ) : applications.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No hay aplicaciones. Crea una nueva aplicación para comenzar.
+            </div>
+          ) : (
+            applications.map((app: any) => (
+              <Card
+                key={app.applicationId}
+                className="hover-elevate cursor-pointer"
+                onClick={() => handleSelectApplication(app.applicationId)}
+                data-testid={`card-application-${app.applicationId}`}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Boxes className="w-6 h-6 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg" data-testid={`text-app-name-${app.applicationId}`}>
+                          {app.name || app.applicationName}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {app.description || ''}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg" data-testid={`text-app-name-${app.id}`}>
-                        {app.name}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {app.description}
-                      </p>
+                    <Badge
+                      variant="default"
+                      className="bg-green-100 text-green-700 border-green-200"
+                    >
+                      {app.status === "active" ? "Activa" : "Inactiva"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-4 gap-4 text-center">
+                    <div className="space-y-1">
+                      <div className="text-2xl font-semibold">{app.deviceCount || 0}</div>
+                      <div className="text-xs text-muted-foreground">Máquinas</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-2xl font-semibold">-</div>
+                      <div className="text-xs text-muted-foreground">Clases</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-2xl font-semibold">-</div>
+                      <div className="text-xs text-muted-foreground">Conectores</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-2xl font-semibold">-</div>
+                      <div className="text-xs text-muted-foreground">Funciones</div>
                     </div>
                   </div>
-                  <Badge 
-                    variant="default"
-                    className="bg-green-100 text-green-700 border-green-200"
-                  >
-                    {app.status === "active" ? "Activa" : "Inactiva"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-4 gap-4 text-center">
-                  <div className="space-y-1">
-                    <div className="text-2xl font-semibold">{app.machines}</div>
-                    <div className="text-xs text-muted-foreground">Máquinas</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-2xl font-semibold">{app.eventClasses}</div>
-                    <div className="text-xs text-muted-foreground">Clases</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-2xl font-semibold">{app.connectors}</div>
-                    <div className="text-xs text-muted-foreground">Conectores</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-2xl font-semibold">{app.functions}</div>
-                    <div className="text-xs text-muted-foreground">Funciones</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       ) : (
         <div>
-          <Button 
-            variant="ghost" 
-            onClick={() => setSelectedApp(null)} 
+          <Button
+            variant="ghost"
+            onClick={handleBackToApplications}
             className="mb-6"
             data-testid="button-back-to-apps"
           >
@@ -225,7 +320,7 @@ export default function Applications() {
           </Button>
 
           <Tabs defaultValue="machines" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="machines" data-testid="tab-machines">
                 <Cpu className="w-4 h-4 mr-2" />
                 Máquinas
@@ -242,168 +337,61 @@ export default function Applications() {
                 <Code className="w-4 h-4 mr-2" />
                 Funciones
               </TabsTrigger>
+              <TabsTrigger value="config" data-testid="tab-config">
+                <Settings className="w-4 h-4 mr-2" />
+                Configuración
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="machines">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Máquinas</h2>
-                <Button onClick={handleNewMachine} data-testid="button-add-machine">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nueva Máquina
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mockMachines
-                  .filter((m) => m.applicationId === selectedApp)
-                  .map((machine) => (
-                  <Card 
-                    key={machine.id} 
-                    className="hover-elevate cursor-pointer" 
-                    onClick={() => setLocation(`/machines/${machine.id}`)}
-                    data-testid={`card-machine-${machine.id}`}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base">{machine.name}</CardTitle>
-                          <p className="text-xs text-muted-foreground font-mono mt-1">
-                            {machine.machineId}
-                          </p>
-                        </div>
-                        <Badge 
-                          variant="default"
-                          className="bg-green-100 text-green-700 border-green-200"
-                        >
-                          Online
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Eventos:</span> {machine.events}
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {machine.connectors.map((conn, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {conn}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <ApplicationMachinesTab
+                machines={machines}
+                isLoading={isLoading}
+                selectedApp={selectedApp}
+                onNewMachine={handleNewMachine}
+                onRowClick={(id) => setLocation(`/machines/${selectedApp}/${id}`)}
+              />
             </TabsContent>
 
             <TabsContent value="connectors">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold">Conectores</h2>
-                <Button data-testid="button-link-connector">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Vincular Conector
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {selectedApp && mockAppConnectors[selectedApp]?.map((connectorId) => {
-                  const connector = allConnectors.find(c => c.id === connectorId);
-                  if (!connector) return null;
-                  
-                  return (
-                    <Card key={connector.id} className="hover-elevate" data-testid={`card-app-connector-${connector.id}`}>
-                      <CardContent className="p-6">
-                        <div className="flex flex-col items-center space-y-4">
-                          <div className="w-full h-20 flex items-center justify-center bg-card rounded-lg">
-                            <img 
-                              src={connector.logo} 
-                              alt={connector.name} 
-                              className="max-w-full max-h-full object-contain p-2"
-                              data-testid={`img-connector-logo-${connector.id}`}
-                            />
-                          </div>
-                          <div className="w-full text-center space-y-1">
-                            <h3 className="font-semibold text-sm">{connector.name}</h3>
-                            <p className="text-xs text-muted-foreground">{connector.protocol}</p>
-                          </div>
-                          <Badge 
-                            variant="default"
-                            className="bg-green-100 text-green-700 border-green-200 w-full justify-center"
-                          >
-                            Conectado
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-                
-                <Card 
-                  className="border-2 border-dashed hover-elevate cursor-pointer" 
-                  data-testid="card-add-connector-to-app"
-                >
-                  <CardContent className="p-6 h-full flex flex-col items-center justify-center text-center space-y-3">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                      <Plus className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Vincular Conector
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+              <ApplicationConnectorsTab
+                onAddConnector={handleAddConnector}
+                applicationId={selectedApp || undefined}
+                organizationId={selectedOrg || undefined}
+              />
             </TabsContent>
 
             <TabsContent value="classes">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Clases de Eventos</h2>
-                <Button data-testid="button-add-event-class">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nueva Clase
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {mockEventClasses.map((eventClass) => (
-                  <Card key={eventClass.id} className="hover-elevate" data-testid={`card-event-class-${eventClass.id}`}>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Tag className="w-5 h-5 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold font-mono">{eventClass.className}</h3>
-                            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                              <span>Topic: {eventClass.topic}</span>
-                              <span>•</span>
-                              <span>Type: {eventClass.type}</span>
-                              {eventClass.authValues > 0 && (
-                                <>
-                                  <span>•</span>
-                                  <span>{eventClass.authValues} valores autorizados</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <ApplicationEventClassesTab
+                selectedOrg={selectedOrg}
+                selectedApp={selectedApp}
+              />
             </TabsContent>
 
             <TabsContent value="functions">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Funciones</h2>
-                <Button data-testid="button-add-function">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nueva Función
-                </Button>
-              </div>
-              <p className="text-muted-foreground">
-                Funciones de procesamiento y transformación de datos
-              </p>
+              <ApplicationFunctionsTab
+                selectedOrg={selectedOrg}
+                selectedApp={selectedApp}
+                machines={machines}
+                eventClasses={eventClasses}
+              />
+            </TabsContent>
+
+            <TabsContent value="config">
+              <ApplicationConfigTab
+                configName={configName}
+                configDescription={configDescription}
+                isLoading={updateAppConfigMutation.isPending}
+                onNameChange={setConfigName}
+                onDescriptionChange={setConfigDescription}
+                onSave={handleSaveConfig}
+                onCancel={() => {
+                  if (applicationDetails) {
+                    setConfigName(applicationDetails.name || "");
+                    setConfigDescription(applicationDetails.description || "");
+                  }
+                }}
+              />
             </TabsContent>
           </Tabs>
         </div>

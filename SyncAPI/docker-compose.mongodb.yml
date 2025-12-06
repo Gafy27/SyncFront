@@ -1,0 +1,13 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: sync-mongodb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+

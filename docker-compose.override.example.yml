@@ -1,0 +1,26 @@
+# Example override file for custom environment variables
+# Copy this file to docker-compose.override.yml and customize
+
+version: '3.8'
+
+services:
+  sync-api:
+    environment:
+      # Override MongoDB connection if using external MongoDB
+      # - MONGODB_URI=mongodb://external-mongodb:27017
+      
+      # Override CORS for production domain
+      # - CORS_ALLOWED_ORIGIN=https://yourdomain.com
+      
+      # Add InfluxDB configuration
+      # - INFLUXDB_HOST=https://your-influxdb-host:8086
+      # - INFLUXDB_TOKEN=your-token
+      # - INFLUXDB_DATABASE__LORA=your-database
+      # - INFLUXDB_ORG=your-org
+
+  sync-admin:
+    environment:
+      # Override API URL if using external API
+      # - SYNC_API_URL=http://external-api:3000
+      # - VITE_API_URL=https://api.yourdomain.com
+

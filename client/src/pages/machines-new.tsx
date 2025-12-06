@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useRoute } from "wouter";
 import { Plus, X, Save, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 
 type MachineEvent = {
   id: string;
@@ -25,13 +28,20 @@ const availableConnectors = [
   "DMG MORI", "Okuma", "KUKA", "Yaskawa", "Universal Robots", "Rockwell"
 ];
 
+const CNC_CONNECTORS = ["FANUC", "HAAS", "Siemens", "Mazak", "DMG MORI", "Okuma", "Rockwell"];
+const ROBOT_CONNECTORS = ["ABB", "KUKA", "Universal Robots", "Yaskawa"];
+
 const availableEventClasses = [
   "EXECUTION", "MODE", "PIECES", "ONLINE", "OP_CODE", "ACTIVITY", 
   "OPERATION", "adc_420", "adc_010", "CONFIG"
 ];
 
+const DEFAULT_ORG_ID = 'autentiodev';
+
 export default function NewMachine() {
   const [, setLocation] = useLocation();
+  const [, params] = useRoute<{ applicationId?: string }>("/machines/new/:applicationId?");
+  const [selectedApplication, setSelectedApplication] = useState<string>("");
   const [machineId, setMachineId] = useState("");
   const [machineName, setMachineName] = useState("");
   const [selectedConnectors, setSelectedConnectors] = useState<string[]>([]);
@@ -41,6 +51,9 @@ export default function NewMachine() {
   const [properties, setProperties] = useState<MachineProperty[]>([
     { key: "", value: "" }
   ]);
+  const [machineIP, setMachineIP] = useState("");
+  const [machinePort, setMachinePort] = useState("");
+  const [machineImageUrl, setMachineImageUrl] = useState("");
 
   const handleAddEvent = () => {
     setEvents([...events, { id: "", label: "", class: "" }]);
@@ -78,23 +91,92 @@ export default function NewMachine() {
     }
   };
 
-  const handleSave = () => {
+  const { toast } = useToast();
+
+  // Fetch applications for selection
+  const { data: applications = [], isLoading: isLoadingApps } = useQuery<any[]>({
+    queryKey: ['/api/organizations', DEFAULT_ORG_ID, 'applications'],
+  });
+
+  // Auto-select application from URL params
+  useEffect(() => {
+    if (params?.applicationId && !selectedApplication) {
+      setSelectedApplication(params.applicationId);
+    }
+  }, [params?.applicationId, selectedApplication]);
+
+  const handleSave = async () => {
+    const applicationId = params?.applicationId || selectedApplication;
+    
+    if (!applicationId) {
+      toast({
+        title: "Error",
+        description: "Debe seleccionar una aplicación",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!machineId.trim()) {
+      toast({
+        title: "Error",
+        description: "El ID de la máquina es requerido",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const machineData = {
-      machine_id: machineId,
-      name: machineName || undefined,
+      machineId: machineId.trim(),
+      name: machineName.trim() || undefined,
       events: events.filter(e => e.id && e.class).map(e => ({
         id: e.id,
         ...(e.label && { label: e.label }),
         class: e.class
       })),
       connectors: selectedConnectors,
-      properties: properties
-        .filter(p => p.key && p.value)
-        .reduce((acc, p) => ({ ...acc, [p.key]: p.value }), {})
+      properties: {
+        ...(properties
+          .filter(p => p.key && p.value)
+          .reduce((acc, p) => ({ ...acc, [p.key]: p.value }), {})),
+        ip: machineIP.trim() || undefined,
+        port: machinePort.trim() ? (isNaN(Number(machinePort.trim())) ? machinePort.trim() : Number(machinePort.trim())) : undefined,
+        imageUrl: machineImageUrl.trim() || undefined
+      }
     };
-    
-    console.log("Nueva máquina:", machineData);
-    setLocation("/applications");
+
+    try {
+      const applicationId = params?.applicationId || selectedApplication;
+      const response = await apiRequest(
+        'POST', 
+        `/api/organizations/${DEFAULT_ORG_ID}/applications/${applicationId}/devices`, 
+        machineData
+      );
+      const data = await response.json();
+      
+      // Invalidate queries to refresh the devices list
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/organizations', DEFAULT_ORG_ID, 'applications', applicationId, 'devices'] 
+      });
+      // Also invalidate applications list to update device count
+      await queryClient.invalidateQueries({ 
+        queryKey: ['/api/organizations', DEFAULT_ORG_ID, 'applications'] 
+      });
+      
+      toast({
+        title: "Éxito",
+        description: "Máquina creada correctamente",
+      });
+      
+      setLocation("/applications");
+    } catch (error) {
+      console.error("Error creating machine:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Error al crear la máquina",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -132,6 +214,36 @@ export default function NewMachine() {
             <CardTitle>Información General</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {!params?.applicationId && (
+              <div className="space-y-2">
+                <Label htmlFor="application-select">Aplicación *</Label>
+                <Select
+                  value={selectedApplication}
+                  onValueChange={setSelectedApplication}
+                  disabled={isLoadingApps}
+                >
+                  <SelectTrigger data-testid="select-application">
+                    <SelectValue placeholder="Seleccionar aplicación" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {applications.map((app: any) => (
+                      <SelectItem key={app.applicationId} value={app.applicationId}>
+                        {app.name || app.applicationId}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {params?.applicationId && (
+              <div className="space-y-2">
+                <Label htmlFor="application-display">Aplicación</Label>
+                <div className="px-3 py-2 bg-muted rounded-md">
+                  {applications.find((app: any) => app.applicationId === params.applicationId)?.name || params.applicationId}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="machine-id">ID de Máquina *</Label>
               <Input
@@ -143,7 +255,7 @@ export default function NewMachine() {
                 data-testid="input-machine-id"
               />
               <p className="text-xs text-muted-foreground">
-                Identificador único de la máquina (EUI, MAC, etc.)
+                Identificador único de la máquina (ID, Machine ID, etc.)
               </p>
             </div>
 
@@ -156,6 +268,21 @@ export default function NewMachine() {
                 onChange={(e) => setMachineName(e.target.value)}
                 data-testid="input-machine-name"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="machine-image-url">URL de Imagen (Opcional)</Label>
+              <Input
+                id="machine-image-url"
+                placeholder="ej: https://example.com/machine-image.jpg"
+                value={machineImageUrl}
+                onChange={(e) => setMachineImageUrl(e.target.value)}
+                type="url"
+                data-testid="input-machine-image-url"
+              />
+              <p className="text-xs text-muted-foreground">
+                URL de la imagen que se mostrará en el detalle de la máquina
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -190,6 +317,39 @@ export default function NewMachine() {
             </div>
           </CardContent>
         </Card>
+
+        {(selectedConnectors.some(c => CNC_CONNECTORS.includes(c)) || 
+          selectedConnectors.some(c => ROBOT_CONNECTORS.includes(c))) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuración de Red</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="machine-ip">IP</Label>
+                <Input
+                  id="machine-ip"
+                  placeholder="ej: 192.168.1.100"
+                  value={machineIP}
+                  onChange={(e) => setMachineIP(e.target.value)}
+                  className="font-mono"
+                  data-testid="input-machine-ip"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="machine-port">Puerto</Label>
+                <Input
+                  id="machine-port"
+                  placeholder="ej: 8080"
+                  value={machinePort}
+                  onChange={(e) => setMachinePort(e.target.value)}
+                  className="font-mono"
+                  data-testid="input-machine-port"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

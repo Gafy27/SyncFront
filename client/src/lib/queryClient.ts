@@ -1,9 +1,26 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getDemoInterceptor } from "@/providers/demo-interceptor-provider";
+import { Alert } from "@/components/ui/alert";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const text = await res.text();
+      if (text) {
+        try {
+          const json = JSON.parse(text);
+          errorMessage = json.message || json.error || text;
+        } catch {
+          errorMessage = text;
+        }
+      }
+    } catch {
+      // If we can't read the response, use statusText
+    }
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
@@ -12,7 +29,18 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const writeMethods = ['PATCH'];
+  // const writeMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+  
+  if (writeMethods.includes(method.toUpperCase())) {
+    const showDemoDialog = getDemoInterceptor();
+    if (showDemoDialog) {
+      await showDemoDialog(method, url);
+    }
+  }
+
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? url : `/${url}`}`;
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
@@ -29,7 +57,9 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
+    const path = queryKey.join("/") as string;
+    const url = path.startsWith('http') ? path : `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
+    const res = await fetch(url, {
       credentials: "include",
     });
 

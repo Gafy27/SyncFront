@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: sync-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=admin
+    networks:
+      - sync-network
+
+  sync-api:
+    build:
+      context: ./SyncAPI
+      dockerfile: Dockerfile
+    container_name: sync-api
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - PORT=3000
+      - CORS_ALLOWED_ORIGIN=http://localhost:5000
+      - ORGANIZATION_ID=autentiodev
+      - NODE_ENV=production
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - sync-network
+    volumes:
+      - ./SyncAPI/resources:/app/resources:ro
+
+  sync-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sync-admin
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - SYNC_API_URL=http://sync-api:3000
+      - VITE_API_URL=http://localhost:3000
+      - NODE_ENV=production
+    depends_on:
+      - sync-api
+    restart: unless-stopped
+    networks:
+      - sync-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  sync-network:
+    driver: bridge
+

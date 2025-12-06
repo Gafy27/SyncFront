@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings, Code } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -11,6 +11,15 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useOrganization } from "@/providers/organization-provider";
 import syncLogoWhite from "@assets/Logo Nutria Sync(1)_1763339643787.png";
 import syncLogoDark from "@assets/Logo Nutria Sync_1763339643787.png";
 
@@ -25,16 +34,8 @@ const menuItems = [
     url: "/organizations",
     icon: Building2,
   },
-  {
-    title: "Usuarios",
-    url: "/users",
-    icon: Users,
-  },
-  {
-    title: "Gateways",
-    url: "/gateways",
-    icon: Radio,
-  },
+
+
   {
     title: "Edges",
     url: "/edges",
@@ -46,9 +47,9 @@ const menuItems = [
     icon: Boxes,
   },
   {
-    title: "Modelos IA",
-    url: "/ai-models",
-    icon: Brain,
+    title: "Python Executor",
+    url: "/python-executor",
+    icon: Code,
   },
   {
     title: "Administración",
@@ -59,6 +60,11 @@ const menuItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { organizations, selectedOrg, setSelectedOrg, isLoading } = useOrganization();
+  const currentOrg =
+    organizations.find((org) => org.id === selectedOrg)?.name ||
+    selectedOrg ||
+    "Selecciona una org";
 
   return (
     <Sidebar>
@@ -66,6 +72,33 @@ export function AppSidebar() {
         <div className="mb-8">
           <img src={syncLogoWhite} alt="Sync" className="h-24 w-auto dark:block hidden" />
           <img src={syncLogoDark} alt="Sync" className="h-24 w-auto dark:hidden block" />
+        </div>
+        <div className="mb-6">
+          <Label className="text-xs text-muted-foreground mb-2 block">Organización</Label>
+          <Select
+            value={selectedOrg || undefined}
+            onValueChange={setSelectedOrg}
+            disabled={isLoading || organizations.length === 0}
+          >
+            <SelectTrigger className="w-full" data-testid="select-organization">
+              <SelectValue placeholder="Selecciona una org" />
+            </SelectTrigger>
+            <SelectContent>
+              {organizations.map((org) => (
+                <SelectItem key={org.id} value={org.id}>
+                  {org.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="mt-2">
+            <Link
+              href="/organizations"
+              className="text-xs text-muted-foreground hover:text-foreground transition underline"
+            >
+              Gestionar organizaciones
+            </Link>
+          </div>
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>

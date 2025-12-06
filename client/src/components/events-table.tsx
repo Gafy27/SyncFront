@@ -12,9 +12,8 @@ interface Event {
   id: string;
   timestamp: string;
   deviceId: string;
-  type: string;
+  eventId: string;
   payload: string;
-  gatewayId: string;
 }
 
 interface EventsTableProps {
@@ -41,9 +40,8 @@ export function EventsTable({ events }: EventsTableProps) {
               <TableRow>
                 <TableHead className="text-xs font-medium uppercase">Hora</TableHead>
                 <TableHead className="text-xs font-medium uppercase">Dispositivo</TableHead>
-                <TableHead className="text-xs font-medium uppercase">Tipo</TableHead>
+                <TableHead className="text-xs font-medium uppercase">Event ID</TableHead>
                 <TableHead className="text-xs font-medium uppercase">Payload</TableHead>
-                <TableHead className="text-xs font-medium uppercase">Gateway</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -53,11 +51,8 @@ export function EventsTable({ events }: EventsTableProps) {
                   <TableCell className="text-sm font-medium" data-testid={`text-device-${event.id}`}>
                     {event.deviceId}
                   </TableCell>
-                  <TableCell className={`text-sm font-medium ${typeColors[event.type] || ""}`}>
-                    {event.type}
-                  </TableCell>
+                  <TableCell className="text-sm font-mono">{event.eventId}</TableCell>
                   <TableCell className="text-sm font-mono">{event.payload}</TableCell>
-                  <TableCell className="text-sm">{event.gatewayId}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
