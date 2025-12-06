@@ -7,12 +7,16 @@ This guide explains how to push your SyncAdminConsole project to a GitHub reposi
 1. Go to [GitHub.com](https://github.com) and sign in
 2. Click the **+** icon in the top right corner
 3. Select **New repository**
-4. Fill in the repository details:
+4. **Important**: If creating under an organization (like `autentiodev`):
+   - Select the organization from the **Owner** dropdown at the top
+   - The repository will be created under that organization
+5. Fill in the repository details:
+   - **Owner**: Select `autentiodev` (or your organization)
    - **Repository name**: `SyncAdminConsole` (or your preferred name)
    - **Description**: (optional) "Sync Admin Console - Multi-tenant industrial IoT management platform"
    - **Visibility**: Choose **Public** or **Private**
    - **DO NOT** initialize with README, .gitignore, or license (we already have these)
-5. Click **Create repository**
+6. Click **Create repository**
 
 ## Step 2: Prepare Your Local Repository
 
@@ -58,15 +62,27 @@ After creating the repository on GitHub, you'll see a page with setup instructio
 
 ### Add the GitHub remote
 
+**For organization repositories (like autentiodev):**
+
 ```bash
-# Replace YOUR_USERNAME and YOUR_REPO_NAME with your actual values
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+# Replace ORGANIZATION_NAME and REPO_NAME with your actual values
+git remote add origin https://github.com/ORGANIZATION_NAME/REPO_NAME.git
+```
+
+**Example for autentiodev organization:**
+```bash
+git remote add origin https://github.com/autentiodev/SyncAdminConsole.git
 ```
 
 Or if you prefer SSH:
 
 ```bash
-git remote add origin git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git
+git remote add origin git@github.com:ORGANIZATION_NAME/REPO_NAME.git
+```
+
+**Example for autentiodev organization:**
+```bash
+git remote add origin git@github.com:autentiodev/SyncAdminConsole.git
 ```
 
 ### Verify the remote was added
@@ -169,8 +185,13 @@ If you already have an `origin` remote:
 # Remove existing origin
 git remote remove origin
 
-# Add new origin
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+# Add new origin (for organization repositories)
+git remote add origin https://github.com/ORGANIZATION_NAME/REPO_NAME.git
+```
+
+**Example for autentiodev:**
+```bash
+git remote add origin https://github.com/autentiodev/SyncAdminConsole.git
 ```
 
 Or rename the existing remote:
@@ -180,7 +201,7 @@ Or rename the existing remote:
 git remote rename origin old-origin
 
 # Add new origin
-git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git remote add origin https://github.com/ORGANIZATION_NAME/REPO_NAME.git
 ```
 
 ### Error: "failed to push some refs"
@@ -219,7 +240,9 @@ git add .
 git commit -m "Your commit message"
 
 # Add remote (first time only)
-git remote add origin https://github.com/USERNAME/REPO.git
+# For organization: https://github.com/ORGANIZATION_NAME/REPO.git
+# Example: https://github.com/autentiodev/SyncAdminConsole.git
+git remote add origin https://github.com/ORGANIZATION_NAME/REPO.git
 
 # Push
 git push -u origin main
