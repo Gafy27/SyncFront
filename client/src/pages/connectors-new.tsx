@@ -12,7 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useOrganization } from "@/providers/organization-provider";
 import { getConnectorIconUrl } from "@/utils/connectorIcons";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface Connector {
   _id: string;

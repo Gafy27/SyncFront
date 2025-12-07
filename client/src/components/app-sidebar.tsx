@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings, Code } from "lucide-react";
+import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -34,22 +34,15 @@ const menuItems = [
     url: "/organizations",
     icon: Building2,
   },
-
-
-  {
-    title: "Edges",
-    url: "/edges",
-    icon: Server,
-  },
   {
     title: "Aplicaciones",
     url: "/applications",
     icon: Boxes,
   },
   {
-    title: "Python Executor",
-    url: "/python-executor",
-    icon: Code,
+    title: "Edges",
+    url: "/edges",
+    icon: Server,
   },
   {
     title: "Administración",
@@ -91,14 +84,7 @@ export function AppSidebar() {
               ))}
             </SelectContent>
           </Select>
-          <div className="mt-2">
-            <Link
-              href="/organizations"
-              className="text-xs text-muted-foreground hover:text-foreground transition underline"
-            >
-              Gestionar organizaciones
-            </Link>
-          </div>
+
         </div>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>

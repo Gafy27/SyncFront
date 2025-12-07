@@ -16,8 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useState, useEffect } from "react";
-
-const DEFAULT_ORG_ID = 'autentiodev';
+import { useOrganization } from "@/providers/organization-provider";
 
 // CNC connectors
 const CNC_CONNECTORS = ["FANUC", "HAAS", "Siemens", "Mazak", "DMG MORI", "Okuma", "Rockwell"];
@@ -58,19 +57,21 @@ export default function MachineDetail() {
   const [, params] = useRoute<{ applicationId: string; eui: string }>("/machines/:applicationId/:eui");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { selectedOrg } = useOrganization();
 
   const applicationId = params?.applicationId;
   const eui = params?.eui;
 
   // Fetch device data
   const { data: device, isLoading, error } = useQuery<any>({
-    queryKey: [`/api/organizations/${DEFAULT_ORG_ID}/applications/${applicationId}/devices/${eui}`],
-    enabled: !!applicationId && !!eui,
+    queryKey: selectedOrg && applicationId && eui ? [`/api/organizations/${selectedOrg}/applications/${applicationId}/devices/${eui}`] : ['device-disabled'],
+    enabled: !!selectedOrg && !!applicationId && !!eui,
   });
 
   // Fetch application data for breadcrumb
   const { data: applications = [] } = useQuery<any[]>({
-    queryKey: ['/api/organizations', DEFAULT_ORG_ID, 'applications'],
+    queryKey: selectedOrg ? ['/api/organizations', selectedOrg, 'applications'] : ['applications-disabled'],
+    enabled: !!selectedOrg,
   });
 
   // Fetch latest events from InfluxDB
@@ -159,15 +160,20 @@ export default function MachineDetail() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
+      if (!selectedOrg || !applicationId || !eui) {
+        throw new Error('Missing organization, application, or device ID');
+      }
       const res = await apiRequest(
         'PUT',
-        `/api/organizations/${DEFAULT_ORG_ID}/applications/${applicationId}/devices/${eui}`,
+        `/api/organizations/${selectedOrg}/applications/${applicationId}/devices/${eui}`,
         data
       );
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${DEFAULT_ORG_ID}/applications/${applicationId}/devices/${eui}`] });
+      if (selectedOrg && applicationId && eui) {
+        queryClient.invalidateQueries({ queryKey: [`/api/organizations/${selectedOrg}/applications/${applicationId}/devices/${eui}`] });
+      }
       toast({ title: "Éxito", description: "Máquina actualizada correctamente" });
     },
     onError: (error: Error) => {

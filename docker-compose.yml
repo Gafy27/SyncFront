@@ -5,7 +5,7 @@ services:
     image: mongo:7.0
     container_name: sync-mongodb
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data:/data/db
     restart: unless-stopped
@@ -20,13 +20,17 @@ services:
       dockerfile: Dockerfile
     container_name: sync-api
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
       - PORT=3000
-      - CORS_ALLOWED_ORIGIN=http://localhost:5000
+      - CORS_ALLOWED_ORIGIN=${CORS_ALLOWED_ORIGIN:-*}
+      - VITE_API_URL=${VITE_API_URL:-}
       - ORGANIZATION_ID=autentiodev
       - NODE_ENV=production
+      - INFLUXDB_HOST=${INFLUXDB_HOST:-}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-}
+      - INFLUXDB_DATABASE=${INFLUXDB_DATABASE:-}
     depends_on:
       - mongodb
     restart: unless-stopped
@@ -39,13 +43,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-}
+        - VITE_DEMO_MODE=${VITE_DEMO_MODE:-true}
     container_name: sync-admin
     ports:
       - "5000:5000"
     environment:
       - PORT=5000
       - SYNC_API_URL=http://sync-api:3000
-      - VITE_API_URL=http://localhost:3000
+      - VITE_API_URL=${VITE_API_URL:-}
+      - VITE_DEMO_MODE=${VITE_DEMO_MODE:-true}
       - NODE_ENV=production
     depends_on:
       - sync-api

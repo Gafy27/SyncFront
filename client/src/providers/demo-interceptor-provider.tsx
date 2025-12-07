@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface DemoInterceptorContextType {
   showDemoDialog: (method: string, url: string) => Promise<boolean>;
@@ -56,15 +57,18 @@ export function DemoInterceptorProvider({ children }: { children: ReactNode }) {
             <AlertDialogTitle>Modo Demo</AlertDialogTitle>
             <AlertDialogDescription>
                 Al ser una versión de demostración, deshabilitamos la escritura en la base de datos. 
-                Si te interesa usar nuestra plataforma, puedes registrarte en nuestro sitio web.
-                <br />
-                <br />
-                <a href="https://www.autentio.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">
-                  Regístrate aquí
-                </a>
+                Si te interesa usar Sync podes contactarnos a través de email.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.location.href = 'mailto:jvarela@autentio.com.ar';
+              }}
+            >
+              Contactar
+            </Button>
             <AlertDialogAction onClick={() => handleClose(false)}>
               Entendido
             </AlertDialogAction>

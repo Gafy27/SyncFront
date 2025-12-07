@@ -21,12 +21,32 @@ router.get("/:machineId/events", async (req: Request, res: Response): Promise<vo
 router.get("/:machineId/status", async (req: Request, res: Response): Promise<void> => {
   try {
     const machineId = req.params.machineId;
+    
+    // Validate machineId
+    if (!machineId || machineId.trim() === '') {
+      res.status(400).json({ error: "Invalid machineId" });
+      return;
+    }
+    
     const data = await queryStatusByMachineId(machineId);
-    res.json(data)
+    
+    // Return null if no data found (not an error)
+    if (data === null) {
+      res.json({ power: null });
+      return;
+    }
+    
+    res.json(data);
   } catch (err) {
     console.error("Error querying InfluxDB:", err);
     const errorMessage = err instanceof Error ? err.message : "Unknown error";
-    res.status(500).json({ error: "Error querying InfluxDB: get failed for queryStatusByMachineId", details: errorMessage });
+    
+    // Check if it's a connection error vs query error
+    if (errorMessage.includes("connection") || errorMessage.includes("ECONNREFUSED")) {
+      res.status(503).json({ error: "InfluxDB service unavailable", details: errorMessage });
+    } else {
+      res.status(500).json({ error: "Error querying InfluxDB: get failed for queryStatusByMachineId", details: errorMessage });
+    }
   }
 });
 // Create Device

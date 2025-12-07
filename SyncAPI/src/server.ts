@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import app from "./app";
 
 const MONGO_URL = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const PORT: Number = parseInt(process.env.PORT || '3000', 10);
+const PORT: number = parseInt(process.env.PORT || '3000', 10);
 
 try {
   mongoose

@@ -12,6 +12,15 @@ COPY postcss.config.js ./
 COPY components.json ./
 COPY drizzle.config.ts ./
 
+# Copy attached_assets early (needed for build)
+COPY attached_assets ./attached_assets
+
+# Accept build arguments for Vite environment variables
+ARG VITE_API_URL=
+ARG VITE_DEMO_MODE=true
+ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
+
 # Install dependencies
 RUN npm ci
 
@@ -36,7 +45,10 @@ RUN npm ci --only=production
 
 # Copy built files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/client/dist ./client/dist
+# Copy server code
+COPY --from=builder /app/server ./server
+# Vite outputs to dist/public, server expects it at server/public
+COPY --from=builder /app/dist/public ./server/public
 
 # Expose port
 EXPOSE 5000

@@ -3,39 +3,32 @@ import { Plus, Server, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const mockEdges = [
   {
     id: "1",
-    name: "Edge-Plant-01",
+    name: "Edge-Planta-01",
     status: "online",
-    location: "Planta Norte - Piso 1",
+    location: "Planta 1",
     type: "Industrial Gateway",
     lastSeen: "Hace 2 minutos",
     organization: "Autentio Manufacturing",
   },
-  {
-    id: "2",
-    name: "Edge-Plant-02",
-    status: "online",
-    location: "Planta Norte - Piso 2",
-    type: "Industrial Gateway",
-    lastSeen: "Hace 5 minutos",
-    organization: "Autentio Manufacturing",
-  },
-  {
-    id: "3",
-    name: "Edge-Warehouse-01",
-    status: "offline",
-    location: "Centro de Distribución",
-    type: "Edge Server",
-    lastSeen: "Hace 3 horas",
-    organization: "Autentio Logistics",
-  },
+
 ];
 
 export default function Edges() {
   const [edges] = useState(mockEdges);
+  const [showComingSoonDialog, setShowComingSoonDialog] = useState(false);
 
   return (
     <div className="p-10">
@@ -52,11 +45,41 @@ export default function Edges() {
             Gestiona los nodos edge de procesamiento distribuido
           </p>
         </div>
-        <Button data-testid="button-add-edge">
+        <Button 
+          data-testid="button-add-edge"
+          onClick={() => setShowComingSoonDialog(true)}
+        >
           <Plus className="w-4 h-4 mr-2" />
-          Nuevo Edge
+          Descargar Synconnect
         </Button>
       </div>
+
+      <AlertDialog open={showComingSoonDialog} onOpenChange={setShowComingSoonDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Función no disponible</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para descargar Synconnect, por favor contáctanos:
+              <div className="mt-3">
+                <a
+                  href="mailto:contacto@autentio.com"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded bg-primary text-white hover:bg-primary/90 text-sm font-medium shadow transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="button-contact"
+                >
+                  Contactar por email
+                </a>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowComingSoonDialog(false)}>
+              Entendido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {edges.map((edge) => (

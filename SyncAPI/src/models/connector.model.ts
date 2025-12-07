@@ -10,6 +10,7 @@ export interface IConnector extends Document {
   driver: string; // Flexible driver field - can be 'fanuc', 'mtconnect', 'abb', 'kuka', 'universal_robots', 'yaskawa', etc.
   description?: string;
   properties: Record<string, any>;
+  collections?: Record<string, IConnectorCollection>;
   applicationId?: string;
   organizationId?: string;
   createdAt?: Date;
@@ -36,6 +37,10 @@ const ConnectorSchema = new Schema<IConnector>({
   properties: {
     type: Schema.Types.Mixed,
     required: true,
+    default: {}
+  },
+  collections: {
+    type: Schema.Types.Mixed,
     default: {}
   },
   applicationId: { type: String },

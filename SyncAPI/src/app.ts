@@ -16,12 +16,21 @@ const nodeEnv = process.env.NODE_ENV || 'development';
 
 // In production, require CORS to be explicitly set for security
 // In development, allow all origins for convenience
-const corsOrigin = allowedOrigin 
-  ? allowedOrigin.split(',').map(origin => origin.trim())
-  : (nodeEnv === 'production' ? false : true);
-
-if (!allowedOrigin && nodeEnv === 'production') {
-  console.warn("WARNING: CORS_ALLOWED_ORIGIN not set in production. CORS will be disabled.");
+let corsOrigin: string | string[] | boolean;
+if (allowedOrigin) {
+  // Handle wildcard or multiple origins
+  if (allowedOrigin === '*' || allowedOrigin.trim() === '*') {
+    corsOrigin = true; // Allow all origins
+  } else {
+    corsOrigin = allowedOrigin.split(',').map(origin => origin.trim());
+  }
+} else if (nodeEnv === 'production') {
+  // In production without CORS_ALLOWED_ORIGIN, allow all origins (less secure but accessible)
+  console.warn("WARNING: CORS_ALLOWED_ORIGIN not set in production. Allowing all origins.");
+  corsOrigin = true;
+} else {
+  // Development: allow all origins
+  corsOrigin = true;
 }
 
 console.log(`CORS configuration: ${Array.isArray(corsOrigin) ? corsOrigin.join(', ') : corsOrigin}`);

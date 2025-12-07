@@ -12,7 +12,7 @@ import { useOrganization } from "@/providers/organization-provider";
 
 export default function Dashboard() {
   const { selectedOrg } = useOrganization();
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
   // Fetch registered devices count across all databases
   const { data: registeredDevices = { count: 0 }, isLoading: loadingRegistered } = useQuery<{ count: number }>({

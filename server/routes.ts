@@ -6,15 +6,21 @@ const SYNC_API_URL = process.env.SYNC_API_URL || 'http://127.0.0.1:3000';
 
 async function proxyRequest(req: Request, res: Response, basePath: string) {
   try {
-    // Use req.originalUrl to get the full path, then replace /api/organizations with /organizations
-    // e.g., /api/organizations/autentiodev/applications -> /organizations/autentiodev/applications
+    // Use req.originalUrl to get the full path
+    // Backend routes: /api/organizations, /api/applications, /device, /api/services, /api/query, /api/library
     const originalPath = req.originalUrl.split('?')[0]; // Remove query string
-    const targetPath = originalPath.replace(/^\/api\/(organizations|applications|device)/, (match) => {
-      if (match === '/api/organizations') return '/organizations';
-      if (match === '/api/applications') return '/applications';
-      if (match === '/api/device') return '/device';
-      return basePath;
-    });
+    let targetPath: string;
+    
+    // basePath tells us what the backend expects
+    // For /api/device -> convert to /device
+    // For everything else -> keep as-is (basePath matches the route)
+    if (basePath === '/device' && originalPath.startsWith('/api/device')) {
+      targetPath = originalPath.replace('/api/device', '/device');
+    } else {
+      // Keep path as-is (basePath should match the route prefix)
+      targetPath = originalPath;
+    }
+    
     const queryString = req.originalUrl.includes('?') ? '?' + req.originalUrl.split('?')[1] : '';
     const url = `${SYNC_API_URL}${targetPath}${queryString}`;
     
@@ -37,10 +43,27 @@ async function proxyRequest(req: Request, res: Response, basePath: string) {
 
     const response = await fetch(url, fetchOptions);
 
-    const contentType = response.headers.get('content-type');
+    // Forward response headers
+    response.headers.forEach((value, key) => {
+      res.setHeader(key, value);
+    });
+
+    // Handle binary content (images, files, etc.)
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.startsWith('image/') || contentType.startsWith('application/octet-stream')) {
+      // For images and binary content, pipe the response directly
+      if (!response.ok) {
+        const text = await response.text();
+        return res.status(response.status).json({ error: text });
+      }
+      const buffer = await response.arrayBuffer();
+      res.status(response.status).send(Buffer.from(buffer));
+      return;
+    }
+
+    // Handle JSON responses
     let data;
-    
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       const text = await response.text();
       try {
         data = JSON.parse(text);
@@ -77,12 +100,16 @@ async function proxyRequest(req: Request, res: Response, basePath: string) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Proxy routes to SyncAPI
-  app.use('/api/organizations', (req, res) => proxyRequest(req, res, '/organizations'));
-  app.use('/api/applications', (req, res) => proxyRequest(req, res, '/applications'));
+  // Proxy routes to SyncAPI - app.use automatically matches all sub-paths
+  // Keep paths as-is since backend expects /api/organizations, etc.
+  // These must be registered BEFORE any catch-all routes
+  app.use('/api/organizations', (req, res) => proxyRequest(req, res, '/api/organizations'));
+  app.use('/api/applications', (req, res) => proxyRequest(req, res, '/api/applications'));
   app.use('/api/device', (req, res) => proxyRequest(req, res, '/device'));
   app.use('/api/connectors', (req, res) => proxyRequest(req, res, '/api/connectors'));
   app.use('/api/services', (req, res) => proxyRequest(req, res, '/api/services'));
+  app.use('/api/query', (req, res) => proxyRequest(req, res, '/api/query'));
+  app.use('/api/library', (req, res) => proxyRequest(req, res, '/api/library'));
 
   const httpServer = createServer(app);
 
