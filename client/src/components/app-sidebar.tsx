@@ -1,4 +1,10 @@
-import { LayoutDashboard, Building2, Users, Radio, Server, Boxes, Brain, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  Boxes,
+  Radio,
+  Plug,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -40,40 +46,51 @@ const menuItems = [
     icon: Boxes,
   },
   {
-    title: "Edges",
-    url: "/edges",
-    icon: Server,
+    title: "Gateways",
+    url: "/gateways",
+    icon: Radio,
   },
   {
-    title: "Administración",
-    url: "/admin",
-    icon: Settings,
+    title: "Conectores",
+    url: "/connectors",
+    icon: Plug,
   },
 ];
 
 export function AppSidebar() {
   const [location] = useLocation();
-  const { organizations, selectedOrg, setSelectedOrg, isLoading } = useOrganization();
-  const currentOrg =
-    organizations.find((org) => org.id === selectedOrg)?.name ||
-    selectedOrg ||
-    "Selecciona una org";
+  const { organizations, selectedOrg, setSelectedOrg, isLoading } =
+    useOrganization();
 
   return (
     <Sidebar>
       <SidebarContent className="p-6">
         <div className="mb-8">
-          <img src={syncLogoWhite} alt="Sync" className="h-24 w-auto dark:block hidden" />
-          <img src={syncLogoDark} alt="Sync" className="h-24 w-auto dark:hidden block" />
+          <img
+            src={syncLogoWhite}
+            alt="Sync"
+            className="h-24 w-auto dark:block hidden"
+          />
+          <img
+            src={syncLogoDark}
+            alt="Sync"
+            className="h-24 w-auto dark:hidden block"
+          />
         </div>
+
         <div className="mb-6">
-          <Label className="text-xs text-muted-foreground mb-2 block">Organización</Label>
+          <Label className="text-xs text-muted-foreground mb-2 block">
+            Organizacion
+          </Label>
           <Select
             value={selectedOrg || undefined}
             onValueChange={setSelectedOrg}
             disabled={isLoading || organizations.length === 0}
           >
-            <SelectTrigger className="w-full" data-testid="select-organization">
+            <SelectTrigger
+              className="w-full"
+              data-testid="select-organization"
+            >
               <SelectValue placeholder="Selecciona una org" />
             </SelectTrigger>
             <SelectContent>
@@ -84,19 +101,27 @@ export function AppSidebar() {
               ))}
             </SelectContent>
           </Select>
-
         </div>
+
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupLabel>Navegacion</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
-                const isActive = location === item.url;
+                const isActive =
+                  item.url === "/"
+                    ? location === "/"
+                    : location.startsWith(item.url);
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild data-active={isActive}>
-                      <Link href={item.url} data-testid={`link-${item.title.toLowerCase()}`}>
-                        <item.icon className={isActive ? "text-primary" : ""} />
+                      <Link
+                        href={item.url}
+                        data-testid={`link-${item.title.toLowerCase()}`}
+                      >
+                        <item.icon
+                          className={isActive ? "text-primary" : ""}
+                        />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -107,10 +132,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarFooter className="p-6">
         <div className="text-xs text-muted-foreground">
-          <div className="font-medium">Autentio IoT Platform</div>
-          <div className="mt-1">v1.0.0</div>
+          <div className="font-medium">SyncCore Platform</div>
+          <div className="mt-1">v2.0.0</div>
         </div>
       </SidebarFooter>
     </Sidebar>
