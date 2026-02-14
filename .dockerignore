@@ -13,6 +13,6 @@ coverage
 *.swp
 *.swo
 *~
-client/dist
+dist
 SyncAPI/dist
 

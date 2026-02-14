@@ -26,8 +26,6 @@ RUN npm ci
 
 # Copy source files
 COPY server ./server
-COPY client ./client
-COPY shared ./shared
 
 # Build the application
 RUN npm run build
