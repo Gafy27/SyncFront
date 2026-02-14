@@ -17,7 +17,7 @@ COPY attached_assets ./attached_assets
 
 # Accept build arguments for Vite environment variables
 ARG VITE_API_URL=
-ARG VITE_DEMO_MODE=true
+ARG VITE_DEMO_MODE=false
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_DEMO_MODE=$VITE_DEMO_MODE
 

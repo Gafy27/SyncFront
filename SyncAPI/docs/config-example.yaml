@@ -1,0 +1,163 @@
+# Sync API — Configuration Examples (YAML)
+# Use for reference when rebuilding in Python or for env/domain config.
+
+# =============================================================================
+# 1. RUNTIME / ENVIRONMENT (maps to process.env in current Node API)
+# =============================================================================
+# In Node: dotenv loads .env; in Python you can load this YAML or use env vars.
+
+runtime:
+  # Server
+  NODE_ENV: development          # or production
+  PORT: 3000
+
+  # MongoDB (default DB for legacy devices + services collection)
+  MONGODB_URI: mongodb://localhost:27017
+
+  # InfluxDB (time-series: state, production, events)
+  INFLUXDB_HOST: https://your-influx-host.example.com
+  INFLUXDB_TOKEN: your-token-here
+  INFLUXDB_DATABASE: your-bucket-name
+
+  # Optional: default org when not in path/query
+  ORGANIZATION_ID: autentiodev
+
+  # CORS (comma-separated origins, or * for all)
+  CORS_ALLOWED_ORIGIN: "*"
+
+
+# =============================================================================
+# 2. ORGANIZATION CONFIG (stored in MongoDB: db(organizationId).config)
+#    Document: { key: 'organization', value: { ... } }
+# =============================================================================
+
+organization:
+  key: organization
+  value:
+    organizationId: acme-corp
+    organizationName: Acme Corp
+    name: Acme Corp
+    description: Acme manufacturing tenant
+    email: admin@acme.example.com
+    website: https://acme.example.com
+    status: active
+    updatedAt: "2025-02-08T12:00:00.000Z"
+
+
+# =============================================================================
+# 3. APPLICATIONS CONFIG (stored in same DB: config collection)
+#    Document: { key: 'applications', value: { ... } }
+# =============================================================================
+
+applications:
+  key: applications
+  value:
+    availableApplications:
+      - monitoreo-cnc
+      - oilmonitor
+    applicationSettings:
+      monitoreo-cnc:
+        name: CNC Monitoring
+        description: Machine tool monitoring and events
+        status: active
+        collections:
+          - devices
+          - config
+        createdAt: "2025-01-15T10:00:00.000Z"
+        updatedAt: "2025-02-08T12:00:00.000Z"
+      oilmonitor:
+        name: Oil Monitor
+        description: Oil condition monitoring
+        status: active
+        collections:
+          - devices
+          - config
+        createdAt: "2025-01-20T14:00:00.000Z"
+        updatedAt: "2025-02-08T12:00:00.000Z"
+
+
+# =============================================================================
+# 4. SERVICE CONFIG (stored in default DB, collection 'services')
+#    Used by /api/services — types: mqtt, kafka, influxdb, timescaledb_cloud,
+#    timescaledb, redis, topics
+# =============================================================================
+
+services:
+  - name: influx-production
+    type: influxdb
+    enabled: true
+    configuration:
+      url: https://influx.example.com
+      token: "${INFLUXDB_TOKEN}"
+      org: my-org
+      bucket: production
+
+  - name: mqtt-broker
+    type: mqtt
+    enabled: true
+    configuration:
+      host: mqtt.example.com
+      port: 1883
+      username: sync-api
+      password: "${MQTT_PASSWORD}"
+
+  - name: redis-cache
+    type: redis
+    enabled: true
+    configuration:
+      host: localhost
+      port: 6379
+      db: 0
+
+
+# =============================================================================
+# 6. EVENT CLASS EXAMPLE (stored in org DB: monitoreo-cnc_events)
+#    Filter: applicationId
+# =============================================================================
+
+event_classes:
+  - id: ec_power_1
+    class: power
+    topic: machine/power
+    type: BOOL
+    applicationId: monitoreo-cnc
+  - id: ec_op_code_1
+    class: op_code
+    topic: production/op_code
+    type: STR
+    auth_values: ["RUN", "STOP", "IDLE"]
+    applicationId: monitoreo-cnc
+  - id: ec_temperature_1
+    class: temperature
+    topic: sensors/temperature
+    type: FLOAT
+    values_range: [0, 200]
+    applicationId: monitoreo-cnc
+
+
+# =============================================================================
+# 7. CONNECTOR EXAMPLE (org-level: collection 'connectors';
+#    app-level: collection '{applicationId}_connectors')
+# =============================================================================
+
+connector:
+  name: mtconnect-gateway-1
+  driver: mtconnect
+  description: MTConnect adapter for cell A
+  organizationId: acme-corp
+  applicationId: monitoreo-cnc  # omit for org-level only
+  properties:
+    host: 192.168.1.100
+    port: 5000
+    agentPath: /current
+  collections:
+    devices:
+      used: true
+      variables:
+        machine_id:
+          label: Machine ID
+    config:
+      used: true
+      variables:
+        sample_interval:
+          label: Sample interval (ms)

@@ -137,6 +137,23 @@ const ROBOT_CONNECTORS = [
   }
 ];
 
+// Application-specific connectors (only these will be added to applications)
+const CNC_APPLICATION_CONNECTORS = [
+  {
+    name: 'Fanuc',
+    driver: 'fanuc',
+    properties: {}
+  }
+];
+
+const ROBOT_APPLICATION_CONNECTORS = [
+  {
+    name: 'Hanwha',
+    driver: 'hanwha',
+    properties: {}
+  }
+];
+
 const PROTOCOL_CONNECTORS = [
   {
     name: 'MQTT',
@@ -175,6 +192,31 @@ const PROTOCOL_CONNECTORS = [
       'INFLUXDB_ORG': '',
       'INFLUXDB_DATABASE': '',
       'INFLUXDB_MEASUREMENT_NAME': ''
+    }
+  },
+  {
+    name: 'OPC UA',
+    driver: 'opcua',
+    properties: {
+      'output': '',
+      'opcua_endpoint': '',
+      'opcua_security_mode': 'None',
+      'opcua_security_policy': 'None',
+      'opcua_username': '',
+      'opcua_password': ''
+    }
+  },
+  {
+    name: 'SQL Server',
+    driver: 'sqlserver',
+    properties: {
+      'input': 'input-data',
+      'SQL_SERVER_HOST': '',
+      'SQL_SERVER_PORT': '1433',
+      'SQL_SERVER_DATABASE': '',
+      'SQL_SERVER_USER': '',
+      'SQL_SERVER_PASSWORD': '',
+      'SQL_SERVER_TABLE': ''
     }
   },
   {
@@ -745,6 +787,51 @@ async function seedFunctions(applicationId: string, functions: any[]) {
   }
 }
 
+async function seedApplicationConnectors(applicationId: string, connectors: any[], collections: any) {
+  let client: MongoClient | null = null;
+  try {
+    console.log(`\n=== Seeding Application Connectors for ${applicationId} ===`);
+    client = await MongoClient.connect(MONGO_URL);
+    const organizationDb: Db = client.db(ORGANIZATION_ID);
+    const applicationManager = new ApplicationManager(organizationDb);
+    
+    for (const connectorConfig of connectors) {
+      try {
+        // Check if connector already exists in application
+        const existingConnectors = await applicationManager.getConnectors(applicationId);
+        const existing = existingConnectors.find((c: any) => c.name === connectorConfig.name);
+        
+        if (existing) {
+          console.log(`  - Connector ${connectorConfig.name} already exists in ${applicationId}. Skipping...`);
+        } else {
+          const connectorData = {
+            name: connectorConfig.name,
+            driver: connectorConfig.driver,
+            description: connectorConfig.description || '',
+            properties: connectorConfig.properties || {},
+            collections: collections,
+            organizationId: ORGANIZATION_ID
+          };
+          
+          await applicationManager.addConnector(applicationId, connectorData);
+          const collectionsCount = Object.keys(collections || {}).length;
+          console.log(`  - Added connector: ${connectorConfig.name} with ${collectionsCount} collections`);
+        }
+      } catch (error) {
+        console.error(`  - Error adding connector ${connectorConfig.name}:`, error);
+      }
+    }
+    console.log(`Successfully seeded ${connectors.length} connectors for ${applicationId}`);
+  } catch (error) {
+    console.error(`Error seeding application connectors for ${applicationId}:`, error);
+    throw error;
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
+}
+
 async function seedMachines(applicationId: string, machines: any[]) {
   let client: MongoClient | null = null;
   try {
@@ -804,6 +891,10 @@ async function main() {
     await createUser();
     await createApplications();
     await seedAllConnectors();
+    // Add only Fanuc connector to monitoreo-cnc application
+    await seedApplicationConnectors(CNC_APPLICATION_ID, CNC_APPLICATION_CONNECTORS, CNC_COLLECTIONS);
+    // Add only Hanwha connector to robosync application
+    await seedApplicationConnectors(ROBOT_APPLICATION_ID, ROBOT_APPLICATION_CONNECTORS, ROBOT_COLLECTIONS);
     await seedEventClasses(CNC_APPLICATION_ID, CNC_EVENT_CLASSES);
     await seedEventClasses(ROBOT_APPLICATION_ID, ROBOT_EVENT_CLASSES);
     await seedFunctions(CNC_APPLICATION_ID, CNC_FUNCTIONS);

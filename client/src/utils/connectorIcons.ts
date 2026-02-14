@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-const CONNECTOR_DRIVERS = ['mqtt', 'postgresql', 'influxdb', 'modbus', 'opcua', 'redis', 's3'];
+const CONNECTOR_DRIVERS = ['mqtt', 'postgresql', 'influxdb', 'modbus', 'opcua', 'redis', 's3', 'sqlserver', 'sql-server'];
 const DRIVER_DRIVERS = ['fanuc', 'haas', 'siemens', 'abb', 'kuka', 'mazak', 'okuma', 'dmgmori', 'dmg mori', 'dmg-mori', 'yaskawa', 'focas', 'mtconnect', 'mt-connect', 'rockwell', 'universalrobots', 'universal_robots', 'universal-robots', 'hanwha'];
 
 const normalizeName = (name: string): string => {
@@ -19,6 +19,8 @@ const getIconName = (input: string): string => {
     'mtconnect': 'mtconnect',
     'universalrobots': 'universal_robots',
     'universal_robots': 'universal_robots',
+    'sqlserver': 'sqlserver',
+    'sql-server': 'sqlserver',
   };
   
   return iconMap[normalized] || normalized;

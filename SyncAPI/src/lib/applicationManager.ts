@@ -243,7 +243,7 @@ class ApplicationManager {
         if (!ec.class && !ec.className) {
           throw new Error(`Event class at index ${index} is missing required field: class or className`);
         }
-        if (!ec.topic) {
+        if (!ec.topic) {  
           throw new Error(`Event class at index ${index} is missing required field: topic`);
         }
         if (!ec.type) {
