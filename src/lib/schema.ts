@@ -3,7 +3,6 @@ import { pgTable, text, serial, integer, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
-
 // === TABLE DEFINITIONS ===
 export const workflows = pgTable("workflows", {
   id: serial("id").primaryKey(),
@@ -39,8 +38,12 @@ export const tablesRelations = relations(tables, ({ one }) => ({
 }));
 
 // === BASE SCHEMAS ===
-export const insertWorkflowSchema = createInsertSchema(workflows).omit({ id: true });
-export const insertTableSchema = createInsertSchema(tables).omit({ id: true });
+export const insertWorkflowSchema = createInsertSchema(workflows).omit({ id: true }).extend({
+  orgId: text("org_id").notNull(),
+});
+export const insertTableSchema = createInsertSchema(tables).omit({ id: true }).extend({
+  orgId: text("org_id").notNull(),
+});
 
 // === EXPLICIT API CONTRACT TYPES ===
 export type Workflow = typeof workflows.$inferSelect;

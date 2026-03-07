@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "@/lib/api";
 
 const CONNECTOR_DRIVERS = [
+  // Standard connectors
   "mqtt",
   "postgresql",
   "influxdb",
@@ -10,6 +11,15 @@ const CONNECTOR_DRIVERS = [
   "s3",
   "sqlserver",
   "sql-server",
+  // Bridge types (BType enum)
+  "kafka",
+  "http",
+  "auth0",
+  "timescaledb",
+  "tdengine",
+  "s2",
+  "file",
+  "temporal",
 ];
 const DRIVER_DRIVERS = [
   "fanuc",
@@ -33,8 +43,8 @@ const DRIVER_DRIVERS = [
   "hanwha",
 ];
 
-const normalizeName = (name: string): string =>
-  name
+const normalizeName = (name: string | null | undefined): string =>
+  (name ?? "")
     .toLowerCase()
     .replace(/\s+/g, "")
     .replace(/-/g, "")
@@ -53,11 +63,12 @@ const getIconName = (input: string): string => {
   return iconMap[normalized] || normalized;
 };
 
-export const getConnectorIconUrl = (name: string, driver: string): string => {
+export const getConnectorIconUrl = (name: string | null | undefined, driverOrSlug?: string | null): string => {
+  const driver = driverOrSlug ?? name ?? "";
   const normalizedDriver = normalizeName(driver);
   const normalizedName = normalizeName(name);
   const iconDriver = getIconName(driver);
-  const iconName = getIconName(name);
+  const iconName = getIconName(name ?? "");
 
   if (CONNECTOR_DRIVERS.includes(normalizedDriver)) {
     return `${API_BASE_URL}/api/library/connectors/${iconDriver}/icon`;

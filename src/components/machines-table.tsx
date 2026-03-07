@@ -8,6 +8,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface Machine {
     id?: string;
@@ -25,14 +27,12 @@ interface Machine {
 interface MachinesTableProps {
     machines: Machine[];
     onRowClick: (machineId: string) => void;
+    onDelete?: (machineId: string) => void;
 }
 
-export function MachinesTable({ machines, onRowClick }: MachinesTableProps) {
+export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableProps) {
     return (
         <Card data-testid="card-machines-table">
-            <CardHeader>
-                <CardTitle className="text-xl font-semibold">Máquinas</CardTitle>
-            </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
                     <Table>
@@ -41,7 +41,7 @@ export function MachinesTable({ machines, onRowClick }: MachinesTableProps) {
                                 <TableHead className="text-xs font-medium uppercase">Nombre</TableHead>
                                 <TableHead className="text-xs font-medium uppercase">Estado</TableHead>
                                 <TableHead className="text-xs font-medium uppercase">Última Actualización</TableHead>
-                                <TableHead className="text-xs font-medium uppercase">Conectores</TableHead>
+                                <TableHead />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -71,7 +71,7 @@ export function MachinesTable({ machines, onRowClick }: MachinesTableProps) {
                                     return (
                                         <TableRow
                                             key={id}
-                                            className="hover-elevate cursor-pointer"
+                                            className="hover-elevate cursor-pointer group"
                                             onClick={() => onRowClick(id)}
                                             data-testid={`row-machine-${id}`}
                                         >
@@ -93,14 +93,21 @@ export function MachinesTable({ machines, onRowClick }: MachinesTableProps) {
                                             <TableCell className="text-sm font-mono text-muted-foreground">
                                                 {lastUpdated}
                                             </TableCell>
-                                            <TableCell className="text-sm">
-                                                <div className="flex flex-wrap gap-1">
-                                                    {machine.connectors?.map((conn, idx) => (
-                                                        <Badge key={idx} variant="secondary" className="text-xs">
-                                                            {conn}
-                                                        </Badge>
-                                                    ))}
-                                                </div>
+                                            <TableCell className="text-right">
+                                                {onDelete && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!confirm(`¿Eliminar máquina "${machine.name}"?`)) return;
+                                                            onDelete(id);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     );

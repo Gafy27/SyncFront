@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { API_BASE_URL } from "./api";
+import { API_BASE_URL, getAuthToken } from "./api";
 
 export async function apiRequest<T = unknown>(
   method: string,
@@ -7,10 +7,15 @@ export async function apiRequest<T = unknown>(
   body?: unknown
 ): Promise<T> {
   const url = `${API_BASE_URL}${path}`;
+  if (import.meta.env.DEV) {
+    console.log("[API]", method, url);
+  }
+  const token = getAuthToken();
   const res = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });

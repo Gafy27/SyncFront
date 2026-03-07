@@ -4,264 +4,137 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { connectors as connectorsApi } from "@/lib/api";
+import { bridges as bridgesApi } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { useOrganization } from "@/providers/organization-provider";
-import type { Connector } from "@/lib/types";
+import type { Bridge } from "@/lib/types";
 
-export default function ConnectorDetail() {
-  const [, params] = useRoute<{ applicationId: string; connectorId: string }>(
-    "/connectors/:applicationId/:connectorId"
-  );
+export default function BridgeDetail() {
+  const [, params] = useRoute<{ bridgeId: string }>("/bridges/:bridgeId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { selectedOrg } = useOrganization();
 
-  const applicationId = params?.applicationId;
-  const connectorId = params?.connectorId;
+  const bridgeId = params?.bridgeId;
 
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [collectionsData, setCollectionsData] = useState<
-    Record<string, boolean>
-  >({});
-  const [connectorName, setConnectorName] = useState("");
+  const [bridgeName, setBridgeName] = useState("");
+  const [configData, setConfigData] = useState<Record<string, any>>({});
 
-  const {
-    data: connector,
-    isLoading,
-    error,
-  } = useQuery<Connector>({
-    queryKey: ["connectors", selectedOrg, applicationId, connectorId],
-    queryFn: () =>
-      connectorsApi.get(selectedOrg!, applicationId!, connectorId!),
-    enabled: !!selectedOrg && !!applicationId && !!connectorId,
+  const { data: bridge, isLoading, error } = useQuery<Bridge>({
+    queryKey: ["organizations", selectedOrg, "bridges", bridgeId],
+    queryFn: () => bridgesApi.get(selectedOrg!, bridgeId!),
+    enabled: !!selectedOrg && !!bridgeId,
   });
 
   useEffect(() => {
-    if (connector) {
-      setConnectorName(connector.name);
-      setFormData(
-        (connector.properties as Record<string, any>) || {}
-      );
-      const cols = connector.collections as Record<string, any> | undefined;
-      if (cols && typeof cols === "object") {
-        const colState: Record<string, boolean> = {};
-        Object.entries(cols).forEach(([key, val]) => {
-          colState[key] =
-            typeof val === "object" && val !== null
-              ? (val as any).used ?? true
-              : !!val;
-        });
-        setCollectionsData(colState);
-      }
+    if (bridge) {
+      setBridgeName(bridge.name);
+      setConfigData((bridge.config as Record<string, any>) || {});
     }
-  }, [connector]);
+  }, [bridge]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: Partial<Connector>) =>
-      connectorsApi.update(selectedOrg!, applicationId!, connectorId!, data),
+    mutationFn: (data: Partial<Bridge>) =>
+      bridgesApi.update(selectedOrg!, bridgeId!, data),
     onSuccess: () => {
-      toast({
-        title: "Conector actualizado",
-        description: "El conector se ha actualizado exitosamente.",
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["connectors", selectedOrg, applicationId, connectorId],
-      });
+      toast({ title: "Bridge actualizado" });
+      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "bridges", bridgeId] });
+      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "bridges"] });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "No se pudo actualizar el conector.",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
-  const handlePropertyChange = (key: string, value: any) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleCollectionToggle = (name: string, enabled: boolean) => {
-    setCollectionsData((prev) => ({ ...prev, [name]: enabled }));
+  const handleConfigChange = (key: string, value: any) => {
+    setConfigData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!connector) return;
-
-    const connectorData: Partial<Connector> = {
-      name: connectorName,
-      properties: formData,
-      collections: collectionsData,
-    };
-
-    updateMutation.mutate(connectorData);
+    if (!bridge) return;
+    updateMutation.mutate({ name: bridgeName, config: configData });
   };
 
   if (isLoading) {
+    return <div className="p-10 text-center">Cargando bridge...</div>;
+  }
+
+  if (error || !bridge) {
     return (
-      <div className="p-10">
-        <div className="text-center py-10">Cargando conector...</div>
+      <div className="p-10 text-center">
+        <p className="text-destructive">Error al cargar el bridge</p>
+        <Button onClick={() => setLocation("/bridges")} className="mt-4">
+          Volver a Bridges
+        </Button>
       </div>
     );
   }
 
-  if (error || !connector) {
-    return (
-      <div className="p-10">
-        <div className="text-center py-10">
-          <p className="text-destructive">Error al cargar el conector</p>
-          <Button
-            onClick={() =>
-              setLocation(`/applications?app=${applicationId}`)
-            }
-            className="mt-4"
-          >
-            Volver a aplicaciones
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const properties = (connector.properties as Record<string, any>) || {};
-  const collections = (connector.collections as Record<string, any>) || {};
+  const config = (bridge.config as Record<string, any>) || {};
 
   return (
     <div className="p-10">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() =>
-            setLocation(`/applications?app=${applicationId}`)
-          }
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => setLocation("/bridges")} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a aplicaciones
+          Volver a Bridges
         </Button>
-        <h1 className="text-3xl font-semibold mb-2">Editar Conector</h1>
+        <h1 className="text-3xl font-semibold mb-2">Editar Bridge</h1>
         <p className="text-muted-foreground">
-          {connector.name} - {connector.driver || connector.template_id || ""}
+          {bridge.name}{bridge.type ? ` — ${bridge.type}` : ""}
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Propiedades del Conector</CardTitle>
+          <CardTitle>Propiedades del Bridge</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="connector-name">Nombre del Conector *</Label>
+              <Label htmlFor="bridge-name">Nombre del Bridge *</Label>
               <Input
-                id="connector-name"
-                value={connectorName}
-                onChange={(e) => setConnectorName(e.target.value)}
+                id="bridge-name"
+                value={bridgeName}
+                onChange={(e) => setBridgeName(e.target.value)}
+                className="font-mono"
                 required
               />
             </div>
 
             <div className="space-y-4">
-              {Object.entries(properties).map(([key, defaultValue]) => (
+              {Object.entries(config).map(([key, defaultValue]) => (
                 <div key={key} className="space-y-2">
-                  <Label htmlFor={`prop-${key}`}>
-                    {key
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  <Label htmlFor={`conf-${key}`}>
+                    {key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
                   </Label>
                   <Input
-                    id={`prop-${key}`}
+                    id={`conf-${key}`}
                     type={
-                      key.toLowerCase().includes("password") ||
-                      key.toLowerCase().includes("token")
+                      key.toLowerCase().includes("password") || key.toLowerCase().includes("token")
                         ? "password"
                         : "text"
                     }
-                    value={
-                      formData[key] !== undefined
-                        ? formData[key]
-                        : defaultValue || ""
-                    }
-                    onChange={(e) => handlePropertyChange(key, e.target.value)}
+                    value={configData[key] != null ? String(configData[key]) : String(defaultValue ?? "")}
+                    onChange={(e) => handleConfigChange(key, e.target.value)}
                     placeholder={String(defaultValue || "")}
                   />
                 </div>
               ))}
-              {Object.keys(properties).length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  No hay propiedades configurables para este conector.
-                </p>
+              {Object.keys(config).length === 0 && (
+                <p className="text-sm text-muted-foreground">No hay propiedades configurables.</p>
               )}
             </div>
 
-            {Object.keys(collections).length > 0 && (
-              <div className="space-y-4 pt-4 border-t">
-                <div>
-                  <Label className="text-base font-semibold">Colecciones</Label>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Selecciona las colecciones que deseas usar para este
-                    conector
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(collections).map(
-                    ([collectionName, collectionData]: [string, any]) => (
-                      <div
-                        key={collectionName}
-                        className="flex items-center justify-between p-3 border rounded-lg"
-                      >
-                        <div className="flex flex-col">
-                          <Label
-                            htmlFor={`collection-${collectionName}`}
-                            className="font-medium cursor-pointer"
-                          >
-                            {collectionName}
-                          </Label>
-                          {collectionData?.variables && (
-                            <span className="text-xs text-muted-foreground">
-                              {Object.keys(collectionData.variables).length}{" "}
-                              variables
-                            </span>
-                          )}
-                        </div>
-                        <Switch
-                          id={`collection-${collectionName}`}
-                          checked={collectionsData[collectionName] ?? false}
-                          onCheckedChange={(checked) =>
-                            handleCollectionToggle(collectionName, checked)
-                          }
-                        />
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
             <div className="flex gap-4">
               <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending
-                  ? "Guardando..."
-                  : "Guardar Cambios"}
+                {updateMutation.isPending ? "Guardando..." : "Guardar Cambios"}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  if (connector) {
-                    setConnectorName(connector.name);
-                    setFormData(
-                      (connector.properties as Record<string, any>) || {}
-                    );
-                  }
-                }}
-              >
+              <Button type="button" variant="outline" onClick={() => setLocation("/bridges")}>
                 Cancelar
               </Button>
             </div>

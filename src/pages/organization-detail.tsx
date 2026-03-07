@@ -12,6 +12,7 @@ import { UsersTable } from "@/components/users-table";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { organizations as orgsApi, orgUsers as orgUsersApi } from "@/lib/api";
 
 type User = {
   id: string;
@@ -39,13 +40,24 @@ export default function OrganizationDetail() {
 
   // Fetch organization data
   const { data: organization, isLoading: orgLoading } = useQuery<Organization>({
-    queryKey: [`/api/organizations/${orgId}`],
+    queryKey: ["organizations", orgId],
+    queryFn: () => orgsApi.get(orgId!),
     enabled: !!orgId,
   });
 
   // Fetch users
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: [`/api/organizations/${orgId}/users`],
+    queryKey: ["organizations", orgId, "users"],
+    queryFn: async () => {
+      const res = await orgUsersApi.list(orgId!);
+      if (Array.isArray(res)) return res as User[];
+      if (res && typeof res === "object") {
+        const o = res as Record<string, unknown>;
+        const key = Object.keys(o).find((k) => Array.isArray(o[k]));
+        if (key) return o[key] as User[];
+      }
+      return [];
+    },
     enabled: !!orgId,
   });
 
@@ -75,16 +87,9 @@ export default function OrganizationDetail() {
 
   // Update organization mutation
   const updateOrgMutation = useMutation({
-    mutationFn: async (data: Partial<Organization>) => {
-      const res = await apiRequest(
-        'PUT',
-        `/api/organizations/${orgId}`,
-        data
-      );
-      return res.json();
-    },
+    mutationFn: (data: Partial<Organization>) => orgsApi.update(orgId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${orgId}`] });
+      queryClient.invalidateQueries({ queryKey: ["organizations", orgId] });
       toast({ title: "Éxito", description: "Configuración guardada correctamente" });
     },
     onError: (error: Error) => {
@@ -103,16 +108,10 @@ export default function OrganizationDetail() {
 
   // Add user mutation
   const addUserMutation = useMutation({
-    mutationFn: async (data: { name: string; email: string; role: string }) => {
-      const res = await apiRequest(
-        'POST',
-        `/api/organizations/${orgId}/users`,
-        data
-      );
-      return res.json();
-    },
+    mutationFn: (data: { name: string; email: string; role: string }) =>
+      orgUsersApi.create(orgId!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/organizations/${orgId}/users`] });
+      queryClient.invalidateQueries({ queryKey: ["organizations", orgId, "users"] });
       setIsAddUserDialogOpen(false);
       setNewUser({ name: "", email: "", role: "user" });
       toast({ title: "Éxito", description: "Usuario agregado correctamente" });

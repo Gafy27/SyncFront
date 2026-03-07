@@ -12,6 +12,7 @@ interface UsageItem {
   unit?: string;
 }
 
+import { getAuthToken } from "@/lib/api";
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export function UsageStatistics() {
@@ -20,7 +21,8 @@ export function UsageStatistics() {
     queryKey: ['/api/query/cpu'],
     queryFn: async () => {
       const url = `${API_BASE_URL}/api/query/cpu`;
-      const res = await fetch(url, { credentials: "include" });
+      const token = getAuthToken();
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       return res.json();
     },
@@ -31,7 +33,8 @@ export function UsageStatistics() {
     queryKey: ['/api/query/ram'],
     queryFn: async () => {
       const url = `${API_BASE_URL}/api/query/ram`;
-      const res = await fetch(url, { credentials: "include" });
+      const token = getAuthToken();
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       return res.json();
     },
@@ -42,7 +45,8 @@ export function UsageStatistics() {
     queryKey: ['/api/query/storage'],
     queryFn: async () => {
       const url = `${API_BASE_URL}/api/query/storage`;
-      const res = await fetch(url, { credentials: "include" });
+      const token = getAuthToken();
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       return res.json();
     },
@@ -53,7 +57,8 @@ export function UsageStatistics() {
     queryKey: ['/api/query/events/processed'],
     queryFn: async () => {
       const url = `${API_BASE_URL}/api/query/events/processed`;
-      const res = await fetch(url, { credentials: "include" });
+      const token = getAuthToken();
+      const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error(`Failed to fetch: ${res.statusText}`);
       return res.json();
     },

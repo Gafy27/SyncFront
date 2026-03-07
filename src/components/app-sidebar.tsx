@@ -1,9 +1,12 @@
 import {
   LayoutDashboard,
   Building2,
-  Boxes,
-  Radio,
   Plug,
+  Cable,
+  Cpu,
+  Zap,
+  Workflow,
+  TerminalSquare,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -41,16 +44,30 @@ const menuItems = [
     icon: Building2,
   },
   {
-    title: "Aplicaciones",
-    url: "/applications",
-    icon: Boxes,
+    title: "Bridges",
+    url: "/bridges",
+    icon: Cable,
   },
   {
-    title: "Gateways",
-    url: "/gateways",
-    icon: Radio,
+    title: "Máquinas",
+    url: "/machines",
+    icon: Cpu,
   },
-
+  {
+    title: "Eventos",
+    url: "/events",
+    icon: Zap,
+  },
+  {
+    title: "Workflows",
+    url: "/workflows",
+    icon: Workflow,
+  },
+  {
+    title: "SQL Editor",
+    url: "/sql-editor",
+    icon: TerminalSquare,
+  },
 ];
 
 export function AppSidebar() {
@@ -91,7 +108,7 @@ export function AppSidebar() {
             </SelectTrigger>
             <SelectContent>
               {organizations.map((org) => (
-                <SelectItem key={org.id} value={org.id}>
+                <SelectItem key={String(org.id)} value={String(org.id)}>
                   {org.name}
                 </SelectItem>
               ))}

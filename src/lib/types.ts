@@ -36,120 +36,104 @@ export interface Service {
 export interface ConnectorTemplate {
   id: string;
   name: string;
-  slug?: string;
-  driver?: string;
-  type: string; // "edge" | "cloud"
+  slug: string;
+  icon?: string | null;
   version?: string;
   is_active?: boolean;
-  collections?: Record<string, unknown>;
-  variables?: Record<string, unknown>;
+  variables?: Record<string, unknown> | { name: string; type: string; label: string; required?: boolean; default?: unknown }[];
+  description?: string | null;
   created_at?: string;
   updated_at?: string;
 }
 
 // ─── Tenant (Organization-Scoped) Resources ────────────────
 
-export interface Application {
+/** Bridge: a configured connection instance (MQTT broker, OPC-UA server, etc.) */
+export interface Bridge {
   id: string;
-  organization_id?: string;
   name: string;
-  slug: string;
-  status: string;
+  type?: string;
+  /** Fields common to all environments */
+  base?: Record<string, unknown>;
+  /** Per-environment field overrides */
+  variants?: Record<string, Record<string, unknown>>;
+  is_default?: boolean;
+  is_enabled?: boolean;
+  template_id?: string;
+  status?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface Gateway {
-  id: string;
-  organization_id?: string;
-  name: string;
-  status: string;
-  host?: string;
-  config?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-}
-
+/** Machine: a device/machine scoped directly to an organization */
 export interface Machine {
   id: string;
-  application_id?: string;
   name: string;
-  status: string;
-  type?: string;
-  config?: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Connector {
-  id: string;
-  application_id?: string;
-  template_id?: string;
-  name: string;
-  driver?: string;
-  status: string;
-  collections?: Record<string, unknown>;
+  /** Bridge names this machine uses */
+  bridges?: string[];
+  /** Driver connector instances attached to this machine */
+  connectors?: { template_id: string; config?: Record<string, unknown> }[];
+  /** Event names this machine can emit */
+  events?: string[];
   properties?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface EventClass {
-  id: string;
-  application_id?: string;
-  name?: string;
-  className?: string;
-  topic?: string;
-  type?: string;
-  auth_values?: string[];
+/** Event: an event type defined at the organization level */
+export interface OrgEvent {
+  id?: string;
+  event: string;        // event identifier/name (e.g. "power", "temperature")
+  topic?: string;       // MQTT topic or similar
+  type?: string;        // data type e.g. "FLOAT", "INT", "BOOL"
   values_range?: number[];
-  schema?: Record<string, unknown>;
+  auth_values?: string[];
+  authenticate?: boolean;
+  is_counter?: boolean;
+  remove_duplicates?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface Pipeline {
-  id: string;
-  application_id?: string;
-  name: string;
+/** Window config for batch workflows */
+export interface WindowConfig {
+  type: string;        // "tumbling" | "sliding" | "stepping"
+  size?: string;       // e.g. "30m", "1h"
   triggers?: string[];
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
-export interface PipelineRule {
-  id: string;
-  pipeline_id?: string;
-  name: string;
-  type: string; // "sql" | "python"
-  definition: string;
-  publish?: boolean;
-  order?: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
+/** Workflow: streaming or batch, stored in same table discriminated by type */
 export interface Workflow {
   id: string;
-  organization_id?: string;
-  application_id?: string;
   name: string;
-  task_queue?: string;
-  window?: {
-    type: string;
-    triggers: string[];
-  };
-  status?: string;
+  /** "stream" (real-time, event-driven) or "batch" (windowed/scheduled) */
+  type: "stream" | "batch";
+  /** Streaming only: event names that trigger processing */
+  triggers?: string[];
+  /** Batch only: window schedule config */
+  window?: WindowConfig;
+  description?: string | null;
+  is_enabled?: boolean;
+  tables?: WorkflowTable[];
+  tables_count?: number;
+  last_executed?: string | null;
+  executions_last_24h?: number;
   created_at?: string;
   updated_at?: string;
 }
 
+/** Table step inside a workflow */
 export interface WorkflowTable {
   id: string;
-  workflow_id?: string;
-  name: string;
+  name?: string;
   upsert_constraints?: string[];
+  time_column?: string | null;
+  /** Streaming: SQL/Python applied to each incoming event */
+  type?: string;        // "sql" | "python"
+  definition?: string;
+  publish?: boolean;
+  memory?: boolean;
+  /** Batch: function definition */
   function?: {
     type: string;
     definition: string;
@@ -157,6 +141,17 @@ export interface WorkflowTable {
   order?: number;
   created_at?: string;
   updated_at?: string;
+}
+
+/** Payload to create a workflow */
+export interface WorkflowCreatePayload {
+  name: string;
+  type: "stream" | "batch";
+  triggers?: string[];
+  window?: WindowConfig;
+  description?: string | null;
+  is_enabled?: boolean;
+  tables?: unknown[];
 }
 
 // ─── API Response Shapes ────────────────────────────────────
@@ -167,19 +162,10 @@ export interface SqlExecuteResponse {
 }
 
 export interface OrgStats {
-  applications_count: number;
-  machines_count: number;
-  connectors_count: number;
-  gateways_count: number;
-  pipelines_count: number;
-  workflows_count: number;
-}
-
-export interface AppStats {
-  machines_count: number;
-  connectors_count: number;
-  event_classes_count: number;
-  pipelines_count: number;
+  machines_count?: number;
+  bridges_count?: number;
+  events_count?: number;
+  workflows_count?: number;
 }
 
 export interface AuthUser extends User {

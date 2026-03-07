@@ -200,23 +200,23 @@ function OrgCard({
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="space-y-1">
             <div className="text-2xl font-semibold">
-              {stats?.applications_count ?? "-"}
+              {stats?.bridges_count ?? "-"}
             </div>
             <div className="text-xs text-muted-foreground">
-              Aplicaciones
+              Bridges
             </div>
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-semibold">
               {stats?.machines_count ?? "-"}
             </div>
-            <div className="text-xs text-muted-foreground">Maquinas</div>
+            <div className="text-xs text-muted-foreground">Máquinas</div>
           </div>
           <div className="space-y-1">
             <div className="text-2xl font-semibold">
-              {stats?.gateways_count ?? "-"}
+              {stats?.events_count ?? "-"}
             </div>
-            <div className="text-xs text-muted-foreground">Gateways</div>
+            <div className="text-xs text-muted-foreground">Eventos</div>
           </div>
         </div>
       </CardContent>

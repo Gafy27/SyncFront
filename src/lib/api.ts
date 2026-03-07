@@ -1,24 +1,32 @@
 import type {
   Organization,
-  Application,
+  Bridge,
   Machine,
-  Connector,
-  Gateway,
-  Pipeline,
-  PipelineRule,
+  OrgEvent,
   Workflow,
   WorkflowTable,
-  EventClass,
   User,
   Service,
   ConnectorTemplate,
   OrgStats,
-  AppStats,
   AuthUser,
 } from "./types";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace(/\/+$/, "") ?? "http://localhost:8001";
+
+export function getAuthToken(): string | null {
+  return localStorage.getItem("auth_token");
+}
+
+export function setAuthToken(token: string) {
+  localStorage.setItem("auth_token", token);
+}
+
+export function clearAuthToken() {
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("auth_user");
+}
 
 // ─── Generic Fetch Helpers ──────────────────────────────────
 
@@ -26,18 +34,39 @@ async function request<T>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  const token = getAuthToken();
   const url = `${API_BASE_URL}${path}`;
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuthToken();
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
     const body = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${body || res.statusText}`);
+    try {
+      const json = JSON.parse(body);
+      if (json.detail) {
+        const detail = typeof json.detail === "string"
+          ? json.detail
+          : Array.isArray(json.detail)
+            ? json.detail.map((e: { msg?: string; loc?: string[] }) =>
+                [e.loc?.slice(1).join("."), e.msg].filter(Boolean).join(": ")
+              ).join(" | ")
+            : JSON.stringify(json.detail);
+        throw new Error(detail);
+      }
+    } catch (e) {
+      if (e instanceof Error && e.message !== body) throw e;
+    }
+    throw new Error(body || res.statusText);
   }
 
   if (res.status === 204) return undefined as T;
@@ -62,23 +91,30 @@ function del<T = void>(path: string) {
 
 // ─── SQL Execute ────────────────────────────────────────────
 
-export async function executeSql<T = Record<string, unknown>>(
+export async function executeQuery(
   query: string,
-  params: unknown[] = []
-): Promise<T[]> {
-  const res = await post<{ rows: T[] } | T[]>("/api/sql/execute", {
-    query,
-    params,
-  });
-  // Handle both { rows: [...] } and [...] shapes
+  orgId: string
+): Promise<Record<string, unknown>[]> {
+  const res = await post<{ rows: Record<string, unknown>[] } | Record<string, unknown>[]>(
+    "/api/sql/execute",
+    { query, org_id: orgId }
+  );
   return Array.isArray(res) ? res : res.rows;
 }
 
 // ─── Auth / Current User ───────────────────────────────────
 
 export const auth = {
-  login: (email: string, password: string) =>
-    post<AuthUser>("/api/auth/login", { email, password }),
+  login: async (username: string, password: string): Promise<AuthUser> => {
+    const res = await request<any>("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username, password }).toString(),
+    });
+    const token = res.access_token ?? res.token;
+    if (token) setAuthToken(token);
+    return res;
+  },
   me: () => get<AuthUser>("/api/users/me"),
   updateMe: (data: Partial<User>) =>
     put<User>("/api/users/me", data),
@@ -131,217 +167,54 @@ export const orgUsers = {
     del(`/api/organizations/${orgId}/users/${userId}`),
 };
 
-// ─── Gateways ───────────────────────────────────────────────
+// ─── Bridges (Org-Scoped) ───────────────────────────────────
 
-export const gateways = {
+export const bridges = {
   list: (orgId: string) =>
-    get<Gateway[]>(`/api/organizations/${orgId}/gateways`),
-  get: (orgId: string, gwId: string) =>
-    get<Gateway>(`/api/organizations/${orgId}/gateways/${gwId}`),
-  create: (orgId: string, data: Partial<Gateway>) =>
-    post<Gateway>(`/api/organizations/${orgId}/gateways`, data),
-  update: (orgId: string, gwId: string, data: Partial<Gateway>) =>
-    put<Gateway>(`/api/organizations/${orgId}/gateways/${gwId}`, data),
-  delete: (orgId: string, gwId: string) =>
-    del(`/api/organizations/${orgId}/gateways/${gwId}`),
+    get<Bridge[]>(`/api/organizations/${orgId}/bridges`),
+  get: (orgId: string, bridgeId: string) =>
+    get<Bridge>(`/api/organizations/${orgId}/bridges/${bridgeId}`),
+  create: (orgId: string, data: Partial<Bridge>) =>
+    post<Bridge>(`/api/organizations/${orgId}/bridges`, data),
+  update: (orgId: string, bridgeId: string, data: Partial<Bridge>) =>
+    put<Bridge>(`/api/organizations/${orgId}/bridges/${bridgeId}`, data),
+  delete: (orgId: string, bridgeId: string) =>
+    del(`/api/organizations/${orgId}/bridges/${bridgeId}`),
 };
 
-// ─── Applications ───────────────────────────────────────────
-
-export const applications = {
-  list: (orgId: string) =>
-    get<Application[]>(`/api/organizations/${orgId}/applications`),
-  get: (orgId: string, appId: string) =>
-    get<Application>(
-      `/api/organizations/${orgId}/applications/${appId}`
-    ),
-  create: (orgId: string, data: Partial<Application>) =>
-    post<Application>(`/api/organizations/${orgId}/applications`, data),
-  update: (orgId: string, appId: string, data: Partial<Application>) =>
-    put<Application>(
-      `/api/organizations/${orgId}/applications/${appId}`,
-      data
-    ),
-  delete: (orgId: string, appId: string) =>
-    del(`/api/organizations/${orgId}/applications/${appId}`),
-  stats: (orgId: string, appId: string) =>
-    get<AppStats>(
-      `/api/organizations/${orgId}/applications/${appId}/stats`
-    ),
-};
-
-// ─── Machines (Application-Scoped) ─────────────────────────
+// ─── Machines (Org-Scoped) ─────────────────────────────────
 
 export const machines = {
-  list: (orgId: string, appId: string) =>
-    get<Machine[]>(
-      `/api/organizations/${orgId}/applications/${appId}/machines`
-    ),
-  get: (orgId: string, appId: string, machineId: string) =>
-    get<Machine>(
-      `/api/organizations/${orgId}/applications/${appId}/machines/${machineId}`
-    ),
-  create: (orgId: string, appId: string, data: Partial<Machine>) =>
-    post<Machine>(
-      `/api/organizations/${orgId}/applications/${appId}/machines`,
-      data
-    ),
-  update: (
-    orgId: string,
-    appId: string,
-    machineId: string,
-    data: Partial<Machine>
-  ) =>
-    put<Machine>(
-      `/api/organizations/${orgId}/applications/${appId}/machines/${machineId}`,
-      data
-    ),
-  delete: (orgId: string, appId: string, machineId: string) =>
-    del(
-      `/api/organizations/${orgId}/applications/${appId}/machines/${machineId}`
-    ),
+  list: (orgId: string) =>
+    get<Machine[]>(`/api/organizations/${orgId}/machines`),
+  get: (orgId: string, machineId: string) =>
+    get<Machine>(`/api/organizations/${orgId}/machines/${machineId}`),
+  create: (orgId: string, data: Partial<Machine>) =>
+    post<Machine>(`/api/organizations/${orgId}/machines`, data),
+  update: (orgId: string, machineId: string, data: Partial<Machine>) =>
+    put<Machine>(`/api/organizations/${orgId}/machines/${machineId}`, data),
+  delete: (orgId: string, machineId: string) =>
+    del(`/api/organizations/${orgId}/machines/${machineId}`),
 };
 
-// ─── Connectors (Application-Scoped) ───────────────────────
+// ─── Events (Org-Scoped) ────────────────────────────────────
 
-export const connectors = {
-  list: (orgId: string, appId: string) =>
-    get<Connector[]>(
-      `/api/organizations/${orgId}/applications/${appId}/connectors`
-    ),
-  get: (orgId: string, appId: string, connId: string) =>
-    get<Connector>(
-      `/api/organizations/${orgId}/applications/${appId}/connectors/${connId}`
-    ),
-  create: (orgId: string, appId: string, data: Partial<Connector>) =>
-    post<Connector>(
-      `/api/organizations/${orgId}/applications/${appId}/connectors`,
-      data
-    ),
-  update: (
-    orgId: string,
-    appId: string,
-    connId: string,
-    data: Partial<Connector>
-  ) =>
-    put<Connector>(
-      `/api/organizations/${orgId}/applications/${appId}/connectors/${connId}`,
-      data
-    ),
-  delete: (orgId: string, appId: string, connId: string) =>
-    del(
-      `/api/organizations/${orgId}/applications/${appId}/connectors/${connId}`
-    ),
+export const events = {
+  list: (orgId: string) =>
+    get<OrgEvent[]>(`/api/organizations/${orgId}/events`),
+  get: (orgId: string, eventId: string) =>
+    get<OrgEvent>(`/api/organizations/${orgId}/events/${eventId}`),
+  create: (orgId: string, data: Partial<OrgEvent>) =>
+    post<OrgEvent>(`/api/organizations/${orgId}/events`, data),
+  bulkReplace: (orgId: string, data: Partial<OrgEvent>[]) =>
+    put<OrgEvent[]>(`/api/organizations/${orgId}/events`, data),
+  update: (orgId: string, eventId: string, data: Partial<OrgEvent>) =>
+    put<OrgEvent>(`/api/organizations/${orgId}/events/${eventId}`, data),
+  delete: (orgId: string, eventId: string) =>
+    del(`/api/organizations/${orgId}/events/${eventId}`),
 };
 
-// ─── Event Classes (Application-Scoped) ────────────────────
-
-export const eventClasses = {
-  list: (orgId: string, appId: string) =>
-    get<EventClass[]>(
-      `/api/organizations/${orgId}/applications/${appId}/event-classes`
-    ),
-  get: (orgId: string, appId: string, ecId: string) =>
-    get<EventClass>(
-      `/api/organizations/${orgId}/applications/${appId}/event-classes/${ecId}`
-    ),
-  create: (orgId: string, appId: string, data: Partial<EventClass>) =>
-    post<EventClass>(
-      `/api/organizations/${orgId}/applications/${appId}/event-classes`,
-      data
-    ),
-  bulkReplace: (orgId: string, appId: string, data: Partial<EventClass>[]) =>
-    put<EventClass[]>(
-      `/api/organizations/${orgId}/applications/${appId}/event-classes`,
-      data
-    ),
-  delete: (orgId: string, appId: string, ecId: string) =>
-    del(
-      `/api/organizations/${orgId}/applications/${appId}/event-classes/${ecId}`
-    ),
-};
-
-// ─── Pipelines (Application-Scoped) ────────────────────────
-
-export const pipelines = {
-  list: (orgId: string, appId: string) =>
-    get<Pipeline[]>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines`
-    ),
-  get: (orgId: string, appId: string, pipelineId: string) =>
-    get<Pipeline>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}`
-    ),
-  create: (orgId: string, appId: string, data: Partial<Pipeline>) =>
-    post<Pipeline>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines`,
-      data
-    ),
-  update: (
-    orgId: string,
-    appId: string,
-    pipelineId: string,
-    data: Partial<Pipeline>
-  ) =>
-    put<Pipeline>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}`,
-      data
-    ),
-  delete: (orgId: string, appId: string, pipelineId: string) =>
-    del(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}`
-    ),
-};
-
-// ─── Pipeline Rules ─────────────────────────────────────────
-
-export const pipelineRules = {
-  list: (orgId: string, appId: string, pipelineId: string) =>
-    get<PipelineRule[]>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}/rules`
-    ),
-  get: (
-    orgId: string,
-    appId: string,
-    pipelineId: string,
-    ruleId: string
-  ) =>
-    get<PipelineRule>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}/rules/${ruleId}`
-    ),
-  create: (
-    orgId: string,
-    appId: string,
-    pipelineId: string,
-    data: Partial<PipelineRule>
-  ) =>
-    post<PipelineRule>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}/rules`,
-      data
-    ),
-  update: (
-    orgId: string,
-    appId: string,
-    pipelineId: string,
-    ruleId: string,
-    data: Partial<PipelineRule>
-  ) =>
-    put<PipelineRule>(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}/rules/${ruleId}`,
-      data
-    ),
-  delete: (
-    orgId: string,
-    appId: string,
-    pipelineId: string,
-    ruleId: string
-  ) =>
-    del(
-      `/api/organizations/${orgId}/applications/${appId}/pipelines/${pipelineId}/rules/${ruleId}`
-    ),
-};
-
-// ─── Workflows (Organization-Scoped) ───────────────────────
+// ─── Workflows (Org-Scoped) ────────────────────────────────
 
 export const workflows = {
   list: (orgId: string) =>
@@ -370,11 +243,7 @@ export const workflowTables = {
     get<WorkflowTable>(
       `/api/organizations/${orgId}/workflows/${workflowId}/tables/${tableId}`
     ),
-  create: (
-    orgId: string,
-    workflowId: string,
-    data: Partial<WorkflowTable>
-  ) =>
+  create: (orgId: string, workflowId: string, data: Partial<WorkflowTable>) =>
     post<WorkflowTable>(
       `/api/organizations/${orgId}/workflows/${workflowId}/tables`,
       data
@@ -394,129 +263,3 @@ export const workflowTables = {
       `/api/organizations/${orgId}/workflows/${workflowId}/tables/${tableId}`
     ),
 };
-
-import { z } from 'zod';
-import { insertWorkflowSchema, insertTableSchema,Table } from '../lib/schema';
-
-// ============================================
-// SHARED ERROR SCHEMAS
-// ============================================
-export const errorSchemas = {
-  validation: z.object({
-    message: z.string(),
-    field: z.string().optional(),
-  }),
-  notFound: z.object({
-    message: z.string(),
-  }),
-  internal: z.object({
-    message: z.string(),
-  }),
-};
-
-// ============================================
-// API CONTRACT
-// ============================================
-export const api = {
-  workflows: {
-    list: {
-      method: 'GET' as const,
-      path: '/api/workflows',
-      responses: {
-        200: z.array(z.custom<Workflow & { tables: Table[] }>()),
-      },
-    },
-    get: {
-      method: 'GET' as const,
-      path: '/api/workflows/:id',
-      responses: {
-        200: z.custom<Workflow & { tables: Table[] }>(),
-        404: errorSchemas.notFound,
-      },
-    },
-    create: {
-      method: 'POST' as const,
-      path: '/api/workflows',
-      input: insertWorkflowSchema,
-      responses: {
-        201: z.custom<Workflow>(),
-        400: errorSchemas.validation,
-      },
-    },
-    update: {
-      method: 'PUT' as const,
-      path: '/api/workflows/:id',
-      input: insertWorkflowSchema.partial(),
-      responses: {
-        200: z.custom<Workflow>(),
-        404: errorSchemas.notFound,
-      },
-    },
-    delete: {
-      method: 'DELETE' as const,
-      path: '/api/workflows/:id',
-      responses: {
-        204: z.void(),
-        404: errorSchemas.notFound,
-      },
-    },
-  },
-  tables: {
-    create: {
-      method: 'POST' as const,
-      path: '/api/tables',
-      input: insertTableSchema,
-      responses: {
-        201: z.custom<Table>(),
-        400: errorSchemas.validation,
-      },
-    },
-    update: {
-      method: 'PUT' as const,
-      path: '/api/tables/:id',
-      input: insertTableSchema.partial(),
-      responses: {
-        200: z.custom<Table>(),
-        404: errorSchemas.notFound,
-      },
-    },
-    delete: {
-      method: 'DELETE' as const,
-      path: '/api/tables/:id',
-      responses: {
-        204: z.void(),
-        404: errorSchemas.notFound,
-      },
-    },
-  },
-  yaml: {
-    import: {
-      method: 'POST' as const,
-      path: '/api/yaml/import',
-      input: z.object({ yamlContent: z.string() }),
-      responses: {
-        200: z.object({ success: z.boolean(), message: z.string() }),
-        400: errorSchemas.validation,
-      },
-    },
-    export: {
-      method: 'GET' as const,
-      path: '/api/yaml/export',
-      responses: {
-        200: z.object({ yamlContent: z.string() }),
-      },
-    },
-  },
-};
-
-export function buildUrl(path: string, params?: Record<string, string | number>): string {
-  let url = path;
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (url.includes(`:${key}`)) {
-        url = url.replace(`:${key}`, String(value));
-      }
-    });
-  }
-  return url;
-}

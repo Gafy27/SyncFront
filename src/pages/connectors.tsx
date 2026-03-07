@@ -7,7 +7,14 @@ import type { ConnectorTemplate } from "@/lib/types";
 export default function Connectors() {
   const { data: templates = [], isLoading } = useQuery<ConnectorTemplate[]>({
     queryKey: ["connector-templates"],
-    queryFn: () => connectorTemplatesApi.list(),
+    queryFn: async () => {
+      const res = await connectorTemplatesApi.list();
+      if (Array.isArray(res)) return res;
+      if (res && typeof res === "object" && "items" in res && Array.isArray((res as { items: ConnectorTemplate[] }).items)) {
+        return (res as { items: ConnectorTemplate[] }).items;
+      }
+      return [];
+    },
   });
 
   return (
@@ -32,7 +39,7 @@ export default function Connectors() {
                 <div className="flex items-center gap-6">
                   <div className="w-24 h-24 flex items-center justify-center bg-gray-100 dark:bg-gray-100 rounded-lg flex-shrink-0">
                     <img
-                      src={getConnectorIconUrl(template.name, template.driver || template.type)}
+                      src={template.icon?.startsWith("http") ? template.icon : getConnectorIconUrl(template.name, template.slug)}
                       alt={template.name}
                       className="w-20 h-20 object-contain"
                       onError={(e) => {
@@ -49,7 +56,7 @@ export default function Connectors() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-base truncate">{template.name}</h3>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {template.driver || template.type}
+                      {template.slug}
                     </div>
                   </div>
                 </div>

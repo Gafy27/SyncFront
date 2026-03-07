@@ -41,9 +41,9 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (organizationList.length > 0) {
       const stored = localStorage.getItem(STORAGE_KEY);
-      const exists = organizationList.some((o) => o.id === stored);
+      const exists = organizationList.some((o) => String(o.id) === stored);
       if (!stored || !exists) {
-        const firstId = organizationList[0].id;
+        const firstId = String(organizationList[0].id);
         setSelectedOrgState(firstId);
         localStorage.setItem(STORAGE_KEY, firstId);
       }
@@ -51,12 +51,13 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [organizationList]);
 
   const setSelectedOrg = (value: string) => {
-    setSelectedOrgState(value);
-    localStorage.setItem(STORAGE_KEY, value);
+    const id = String(value);
+    setSelectedOrgState(id);
+    localStorage.setItem(STORAGE_KEY, id);
   };
 
   const currentOrg = useMemo(
-    () => organizationList.find((o) => o.id === selectedOrg) ?? null,
+    () => organizationList.find((o) => String(o.id) === selectedOrg) ?? null,
     [organizationList, selectedOrg]
   );
 

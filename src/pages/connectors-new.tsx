@@ -1,19 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
-import { ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search, Plus, X, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { connectors as connectorsApi, API_BASE_URL } from "@/lib/api";
+import { bridges as bridgesApi, API_BASE_URL, getAuthToken } from "@/lib/api";
 import { useOrganization } from "@/providers/organization-provider";
 import { getConnectorIconUrl } from "@/utils/connectorIcons";
 
-// Types for the connector template format from /api/connector-templates
 interface ConnectorVariable {
   name: string;
   type: string;
@@ -22,343 +23,406 @@ interface ConnectorVariable {
   default?: any;
 }
 
-interface TemplateCollection {
-  name: string;
-  label?: string;
-}
-
 interface ConnectorTemplate {
   id: string;
   name: string;
   slug: string;
-  driver: string;
-  version: string;
-  is_active: boolean;
+  type?: string;
+  version?: string;
+  is_active?: boolean;
+  icon?: string | null;
   variables: ConnectorVariable[];
-  collections?: TemplateCollection[];
-  description?: string;
+  description?: string | null;
 }
 
-export default function NewConnector() {
+function getInputType(variable: ConnectorVariable): string {
+  if (variable.type === "integer" || variable.type === "number") return "number";
+  if (
+    variable.type === "password" ||
+    variable.name.toLowerCase().includes("password") ||
+    variable.name.toLowerCase().includes("token")
+  )
+    return "password";
+  return "text";
+}
+
+function VariableFields({
+  variables,
+  values,
+  onChange,
+  placeholder,
+}: {
+  variables: ConnectorVariable[];
+  values: Record<string, string>;
+  onChange: (key: string, value: string) => void;
+  placeholder?: string;
+}) {
+  if (!variables || variables.length === 0) {
+    return <p className="text-sm text-muted-foreground">No hay variables configurables.</p>;
+  }
+  return (
+    <div className="space-y-4">
+      {variables.map((v) => {
+        const inputType = getInputType(v);
+        return (
+          <div key={v.name} className="space-y-2">
+            <Label htmlFor={`field-${v.name}`}>
+              {v.label || v.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+              {v.required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${v.name}`}
+              type={inputType}
+              value={values[v.name] ?? ""}
+              onChange={(e) => onChange(v.name, e.target.value)}
+              placeholder={placeholder ?? (v.default != null ? String(v.default) : "")}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function NewBridge() {
   const [, setLocation] = useLocation();
-  const [, paramsSelect] = useRoute<{ applicationId: string }>('/connectors/new/:applicationId');
-  const [, paramsConfig] = useRoute<{ applicationId: string; templateId: string }>('/connectors/new/:applicationId/:templateId');
+  const [, paramsSelect] = useRoute<{ templateId: string }>("/bridges/new/:templateId");
   const { toast } = useToast();
   const { selectedOrg } = useOrganization();
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [collectionsData, setCollectionsData] = useState<Record<string, { used: boolean }>>({});
+
+  // Step 1: template selection
   const [searchQuery, setSearchQuery] = useState("");
 
-  const applicationId = paramsConfig?.applicationId || paramsSelect?.applicationId;
-  const templateId = paramsConfig?.templateId;
+  // Step 2: form state
+  const [name, setName] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
+  const [baseFields, setBaseFields] = useState<Record<string, string>>({});
+  const [variantEnvs, setVariantEnvs] = useState<string[]>(["dev", "prod"]);
+  const [variantFields, setVariantFields] = useState<Record<string, Record<string, string>>>({
+    dev: {},
+    prod: {},
+  });
+  const [activeTab, setActiveTab] = useState("base");
+  const [newEnvName, setNewEnvName] = useState("");
+  const [showAddEnv, setShowAddEnv] = useState(false);
 
-  // Fetch all connector templates for selection & for form building
+  const templateId = paramsSelect?.templateId;
+
   const { data: connectorTemplates = [], isLoading } = useQuery<ConnectorTemplate[]>({
-    queryKey: ['/api/connector-templates', selectedOrg],
+    queryKey: ["/api/connector-templates"],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/api/connector-templates`, { credentials: "include" });
-      if (!res.ok) throw new Error('Failed to fetch connector templates');
-      return await res.json();
+      const token = getAuthToken();
+      const res = await fetch(`${API_BASE_URL}/api/connector-templates`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) throw new Error("Failed to fetch connector templates");
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+      if (data?.items && Array.isArray(data.items)) return data.items;
+      return [];
     },
-    enabled: !!selectedOrg,
   });
 
-  // Filter templates for search
   const filteredTemplates = useMemo(() => {
-    if (!searchQuery.trim()) return connectorTemplates;
+    const nonDrivers = connectorTemplates.filter(
+      (t) => t.type?.toUpperCase() !== "DRIVER" && t.type?.toUpperCase() !== "SELECT"
+    );
+    if (!searchQuery.trim()) return nonDrivers;
     const query = searchQuery.toLowerCase();
-    return connectorTemplates.filter((template) =>
-      template.name.toLowerCase().includes(query) ||
-      template.driver.toLowerCase().includes(query) ||
-      (template.description && template.description.toLowerCase().includes(query))
+    return nonDrivers.filter(
+      (t) =>
+        t.name?.toLowerCase().includes(query) ||
+        t.slug?.toLowerCase().includes(query) ||
+        t.description?.toLowerCase().includes(query)
     );
   }, [connectorTemplates, searchQuery]);
 
-  // Find the template matching the selected templateId
   const selectedTemplate: ConnectorTemplate | undefined = templateId
     ? connectorTemplates.find((tpl) => tpl.id === templateId)
     : undefined;
 
-  // When a template is selected, initialize form with its defaults
   useEffect(() => {
     if (selectedTemplate) {
-      const initial: Record<string, any> = {};
-      selectedTemplate.variables.forEach((v) => {
-        if (typeof v.default !== "undefined") {
-          initial[v.name] = v.default;
-        }
-      });
-      setFormData({ ...initial });
-      if (selectedTemplate.collections && selectedTemplate.collections.length > 0) {
-        const initCol: Record<string, { used: boolean }> = {};
-        selectedTemplate.collections.forEach((col) => {
-          initCol[col.name] = { used: false };
-        });
-        setCollectionsData(initCol);
-      }
+      setName("");
+      setIsDefault(false);
+      setBaseFields({});
+      setVariantEnvs(["dev", "prod"]);
+      setVariantFields({ dev: {}, prod: {} });
+      setActiveTab("base");
     }
-  }, [selectedTemplate]);
+  }, [selectedTemplate?.id]);
 
-  // Create connector via correct API route
-  const createConnectorMutation = useMutation({
+  const createBridgeMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
-      if (!applicationId) throw new Error('Application ID is required');
-      if (!selectedOrg) throw new Error('Organization ID is required');
-      return connectorsApi.create(selectedOrg, applicationId, data);
+      if (!selectedOrg) throw new Error("Organization ID is required");
+      return bridgesApi.create(selectedOrg, data);
     },
     onSuccess: () => {
-      toast({
-        title: "Conector creado",
-        description: "El conector se ha creado exitosamente.",
-      });
-      if (applicationId) {
-        queryClient.invalidateQueries({ queryKey: ['connectors', selectedOrg, applicationId] });
-        setLocation(`/applications?app=${applicationId}`);
-      }
+      toast({ title: "Bridge creado", description: "El bridge se ha creado exitosamente." });
+      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "bridges"] });
+      setLocation("/bridges");
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudo crear el conector.",
+        description: error.message || "No se pudo crear el bridge.",
         variant: "destructive",
       });
     },
   });
 
-  // When selecting from the list, redirect with new connector template id
-  const handleConnectorSelect = (templateId: string) => {
-    if (!applicationId) {
-      toast({ title: "Error", description: "Application ID is required.", variant: "destructive" });
-      return;
-    }
-    setLocation(`/connectors/new/${applicationId}/${templateId}`);
+  const handleTemplateSelect = (id: string) => {
+    setLocation(`/bridges/new/${id}`);
   };
 
-  // Change handler for connector parameter fields
-  const handlePropertyChange = (key: string, value: any) => {
-    setFormData(prev => ({
+  const handleBaseChange = (key: string, value: string) => {
+    setBaseFields((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleVariantChange = (env: string, key: string, value: string) => {
+    setVariantFields((prev) => ({
       ...prev,
-      [key]: value
+      [env]: { ...(prev[env] ?? {}), [key]: value },
     }));
   };
 
-  // Toggle collection 'used'
-  const handleCollectionToggle = (collectionName: string, enabled: boolean) => {
-    setCollectionsData(prev => ({
-      ...prev,
-      [collectionName]: {
-        ...((prev && prev[collectionName]) || {}),
-        used: enabled,
-      },
-    }));
+  const handleAddEnv = () => {
+    const env = newEnvName.trim().toLowerCase();
+    if (!env || variantEnvs.includes(env)) return;
+    setVariantEnvs((prev) => [...prev, env]);
+    setVariantFields((prev) => ({ ...prev, [env]: {} }));
+    setNewEnvName("");
+    setShowAddEnv(false);
+    setActiveTab(env);
   };
 
-  // Submit handler that uses template schema
+  const handleRemoveEnv = (env: string) => {
+    setVariantEnvs((prev) => prev.filter((e) => e !== env));
+    setVariantFields((prev) => {
+      const next = { ...prev };
+      delete next[env];
+      return next;
+    });
+    if (activeTab === env) setActiveTab("base");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTemplate) return;
+    if (!selectedTemplate || !selectedOrg) return;
 
-    const { name, ...props } = formData;
+    // Strip empty values
+    const base: Record<string, any> = {};
+    Object.entries(baseFields).forEach(([k, v]) => {
+      if (v !== "") base[k] = v;
+    });
 
-    if (!applicationId) {
-      toast({ title: "Error", description: "Application ID is required.", variant: "destructive" });
-      return;
-    }
-
-    // Build up collections as expected by the API
-    let collectionsPayload: Record<string, any> = {};
-    if (selectedTemplate.collections) {
-      selectedTemplate.collections.forEach(col => {
-        collectionsPayload[col.name] = { used: collectionsData[col.name]?.used || false };
+    const variants: Record<string, Record<string, any>> = {};
+    variantEnvs.forEach((env) => {
+      const envFields: Record<string, any> = {};
+      Object.entries(variantFields[env] ?? {}).forEach(([k, v]) => {
+        if (v !== "") envFields[k] = v;
       });
-    }
-    // Build up properties (only those present in template, with value).
-    const propPayload: Record<string, any> = {};
-    selectedTemplate.variables.forEach(v => {
-      if (typeof props[v.name] !== "undefined") {
-        propPayload[v.name] = props[v.name];
+      if (Object.keys(envFields).length > 0) {
+        variants[env] = envFields;
       }
     });
 
-    const connectorData = {
-      application_id: applicationId,
-      organization_id: selectedOrg,
+    createBridgeMutation.mutate({
       name: name || selectedTemplate.name,
+      type: selectedTemplate.slug,
       template_id: templateId,
-      driver: selectedTemplate.driver,
-      properties: propPayload,
-      collections: collectionsPayload,
-    };
-
-    createConnectorMutation.mutate(connectorData);
+      is_default: isDefault,
+      is_enabled: true,
+      base,
+      variants,
+    });
   };
 
-  // If a connector template was chosen, show the configuration form
+  // ── Configuration form ──────────────────────────────────────────────────────
   if (templateId && selectedTemplate) {
     return (
-      <div className="p-10">
+      <div className="p-10 max-w-3xl">
         <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => {
-              if (applicationId) {
-                setLocation(`/connectors/new/${applicationId}`);
-              } else {
-                setLocation('/connectors');
-              }
-            }}
-            className="mb-4"
-          >
+          <Button variant="ghost" onClick={() => setLocation("/bridges/new")} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a conectores
           </Button>
-          <h1 className="text-3xl font-semibold mb-2">Configurar Conector</h1>
+          <h1 className="text-3xl font-semibold mb-1">Configurar Bridge</h1>
           <p className="text-muted-foreground">
-            {selectedTemplate.name} - {selectedTemplate.driver}
+            {selectedTemplate.name}
+            {selectedTemplate.slug && (
+              <span className="ml-1 text-xs">({selectedTemplate.slug})</span>
+            )}
           </p>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Propiedades del Conector</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Name + default */}
+          <Card>
+            <CardHeader>
+              <CardTitle>General</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="connector-name">Nombre del Conector *</Label>
+                <Label htmlFor="bridge-name">Nombre del Bridge *</Label>
                 <Input
-                  id="connector-name"
-                  value={formData.name ?? ""}
-                  onChange={(e) => handlePropertyChange('name', e.target.value)}
+                  id="bridge-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="ej: emqx, main, analytics"
+                  className="font-mono"
                   required
                 />
               </div>
-              <div className="space-y-4">
-                {/* Render form fields for each variable/parameter in the connector template */}
-                {selectedTemplate.variables && selectedTemplate.variables.length > 0 ? selectedTemplate.variables.map((variable) => {
-                  let type = "text";
-                  if (variable.type === "integer" || variable.type === "number") type = "number";
-                  if (
-                    variable.type === "password" ||
-                    variable.name.toLowerCase().includes("password") ||
-                    variable.name.toLowerCase().includes("token")
-                  ) {
-                    type = "password";
-                  }
-                  return (
-                    <div key={variable.name} className="space-y-2">
-                      <Label htmlFor={`var-${variable.name}`}>
-                        {variable.label || variable.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        {variable.required && <span className="text-destructive ml-1">*</span>}
-                      </Label>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="is-default"
+                  checked={isDefault}
+                  onCheckedChange={setIsDefault}
+                />
+                <Label htmlFor="is-default" className="flex items-center gap-2 cursor-pointer">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  Marcar como default
+                  <span className="text-xs text-muted-foreground font-normal">
+                    — Syncore usará este bridge como fuente de verdad para su tipo
+                  </span>
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Base + Variants tabs */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Configuración</CardTitle>
+                <div className="flex items-center gap-2">
+                  {showAddEnv ? (
+                    <div className="flex items-center gap-2">
                       <Input
-                        id={`var-${variable.name}`}
-                        type={type}
-                        value={
-                          formData[variable.name] !== undefined
-                            ? formData[variable.name]
-                            : (typeof variable.default !== "undefined" ? String(variable.default) : "")
-                        }
-                        onChange={e => handlePropertyChange(variable.name, type === 'number' ? Number(e.target.value) : e.target.value)}
-                        required={!!variable.required}
-                        placeholder={typeof variable.default !== "undefined" ? String(variable.default) : ""}
+                        value={newEnvName}
+                        onChange={(e) => setNewEnvName(e.target.value)}
+                        placeholder="nombre env"
+                        className="h-8 w-32 text-sm font-mono"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") { e.preventDefault(); handleAddEnv(); }
+                          if (e.key === "Escape") { setShowAddEnv(false); setNewEnvName(""); }
+                        }}
+                        autoFocus
                       />
+                      <Button type="button" size="sm" variant="outline" onClick={handleAddEnv}>
+                        Agregar
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => { setShowAddEnv(false); setNewEnvName(""); }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
                     </div>
-                  );
-                }) : (
-                  <p className="text-sm text-muted-foreground">No hay variables configurables para este conector.</p>
-                )}
-              </div>
-              {selectedTemplate.collections && selectedTemplate.collections.length > 0 && (
-                <div className="space-y-4 pt-4 border-t">
-                  <div>
-                    <Label className="text-base font-semibold">Colecciones</Label>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Selecciona las colecciones que deseas usar para este conector
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedTemplate.collections.map((col) => (
-                      <div key={col.name} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex flex-col">
-                          <Label htmlFor={`collection-${col.name}`} className="font-medium cursor-pointer">
-                            {col.label || col.name}
-                          </Label>
-                        </div>
-                        <Switch
-                          id={`collection-${col.name}`}
-                          checked={collectionsData[col.name]?.used || false}
-                          onCheckedChange={(checked) => handleCollectionToggle(col.name, checked)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowAddEnv(true)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Variante
+                    </Button>
+                  )}
                 </div>
-              )}
-              <div className="flex gap-4">
-                <Button type="submit" disabled={createConnectorMutation.isPending}>
-                  {createConnectorMutation.isPending ? 'Creando...' : 'Crear Conector'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setLocation('/connectors')}
-                >
-                  Cancelar
-                </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+              <p className="text-sm text-muted-foreground">
+                Los campos de <strong>Base</strong> son comunes a todos los entornos. Los campos de
+                cada variante sobreescriben la base para ese entorno.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="mb-4 flex-wrap h-auto gap-1">
+                  <TabsTrigger value="base">Base</TabsTrigger>
+                  {variantEnvs.map((env) => (
+                    <div key={env} className="flex items-center">
+                      <TabsTrigger value={env} className="capitalize pr-1">
+                        {env}
+                      </TabsTrigger>
+                      {variantEnvs.length > 1 && (
+                        <button
+                          type="button"
+                          className="ml-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                          onClick={() => handleRemoveEnv(env)}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </TabsList>
+
+                <TabsContent value="base">
+                  <VariableFields
+                    variables={selectedTemplate.variables}
+                    values={baseFields}
+                    onChange={handleBaseChange}
+                    placeholder="valor común a todos los entornos"
+                  />
+                </TabsContent>
+
+                {variantEnvs.map((env) => (
+                  <TabsContent key={env} value={env}>
+                    <div className="mb-3">
+                      <Badge variant="outline" className="capitalize text-xs">{env}</Badge>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        Solo completa los campos que difieren de la base para este entorno.
+                      </span>
+                    </div>
+                    <VariableFields
+                      variables={selectedTemplate.variables}
+                      values={variantFields[env] ?? {}}
+                      onChange={(k, v) => handleVariantChange(env, k, v)}
+                      placeholder="dejar vacío para usar el valor base"
+                    />
+                  </TabsContent>
+                ))}
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-4">
+            <Button type="submit" disabled={createBridgeMutation.isPending}>
+              {createBridgeMutation.isPending ? "Creando..." : "Crear Bridge"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setLocation("/bridges/new")}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
       </div>
     );
   }
 
-  // If no app was selected, return error message
-  if (!applicationId) {
-    return (
-      <div className="p-10">
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => setLocation('/applications')}
-            className="mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Aplicaciones
-          </Button>
-          <h1 className="text-3xl font-semibold mb-2">Error</h1>
-          <p className="text-muted-foreground">
-            Se requiere un ID de aplicación para crear un conector.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show the list of connector templates to choose from
+  // ── Template selection ──────────────────────────────────────────────────────
   return (
     <div className="p-10">
       <div className="mb-6">
-        <Button
-          variant="ghost"
-          onClick={() => setLocation(`/applications?app=${applicationId}`)}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => setLocation("/bridges")} className="mb-4">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver a Aplicación
+          Volver a Bridges
         </Button>
-        <h1 className="text-3xl font-semibold mb-2">Agregar Nuevo Conector</h1>
-        <p className="text-muted-foreground">
-          Selecciona un conector base para configurar
-        </p>
+        <h1 className="text-3xl font-semibold mb-2">Nuevo Bridge</h1>
+        <p className="text-muted-foreground">Selecciona un conector base para configurar</p>
       </div>
+
       {isLoading ? (
         <div className="text-center py-10">Cargando conectores...</div>
       ) : (
         <>
           <div className="mb-6">
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar conectores..."
                 value={searchQuery}
@@ -372,20 +436,24 @@ export default function NewConnector() {
               <Card
                 key={template.id}
                 className="hover-elevate cursor-pointer"
-                onClick={() => handleConnectorSelect(template.id)}
+                onClick={() => handleTemplateSelect(template.id)}
               >
                 <CardContent className="p-6">
                   <div className="flex items-center gap-6">
                     <div className="w-24 h-24 flex items-center justify-center bg-gray-100 dark:bg-gray-100 rounded-lg flex-shrink-0">
                       <img
-                        src={getConnectorIconUrl(template.name, template.driver)}
+                        src={
+                          template.icon?.startsWith("http")
+                            ? template.icon
+                            : getConnectorIconUrl(template.name, template.slug)
+                        }
                         alt={template.name}
                         className="w-20 h-20 object-contain"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
+                          target.style.display = "none";
                           const fallback = target.nextElementSibling as HTMLElement;
-                          if (fallback) fallback.style.display = 'flex';
+                          if (fallback) fallback.style.display = "flex";
                         }}
                       />
                       <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center text-base font-semibold hidden">
@@ -394,7 +462,7 @@ export default function NewConnector() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-base truncate">{template.name}</h3>
-                      <span className="text-xs text-muted-foreground">{template.driver}</span>
+                      <span className="text-xs text-muted-foreground">{template.slug}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -403,7 +471,7 @@ export default function NewConnector() {
           </div>
           {filteredTemplates.length === 0 && searchQuery && (
             <div className="text-center py-10 text-muted-foreground">
-              No se encontraron conectores que coincidan con "{searchQuery}"
+              No se encontraron conectores para "{searchQuery}"
             </div>
           )}
         </>
