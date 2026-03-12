@@ -10,6 +10,8 @@ import type {
   ConnectorTemplate,
   OrgStats,
   AuthUser,
+  RunsListResponse,
+  ActivitiesListResponse,
 } from "./types";
 
 export const API_BASE_URL =
@@ -230,6 +232,25 @@ export const workflows = {
     ),
   delete: (orgId: string, workflowId: string) =>
     del(`/api/organizations/${orgId}/workflows/${workflowId}`),
+  start: (orgId: string, workflowId: string) =>
+    post<Workflow>(`/api/organizations/${orgId}/workflows/${workflowId}/start`, {}),
+  stop: (orgId: string, workflowId: string) =>
+    post<Workflow>(`/api/organizations/${orgId}/workflows/${workflowId}/stop`, {}),
+  terminate: (orgId: string, workflowId: string) =>
+    post<Workflow>(`/api/organizations/${orgId}/workflows/${workflowId}/terminate`, {}),
+};
+
+// ─── Workflow Runs & Activity Logs ──────────────────────────
+
+export const workflowRuns = {
+  list: (orgId: string, workflowId: string, page = 1, pageSize = 50) =>
+    get<RunsListResponse>(
+      `/api/organizations/${orgId}/workflows/${workflowId}/runs?page=${page}&page_size=${pageSize}`
+    ),
+  activities: (orgId: string, workflowId: string, runId: string, page = 1, pageSize = 200) =>
+    get<ActivitiesListResponse>(
+      `/api/organizations/${orgId}/workflows/${workflowId}/runs/${runId}?page=${page}&page_size=${pageSize}`
+    ),
 };
 
 // ─── Workflow Tables ────────────────────────────────────────

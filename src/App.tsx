@@ -24,6 +24,8 @@ import MachineDetail from "@/pages/machine-detail";
 import NotFound from "@/pages/not-found";
 import Workflows from "@/pages/workflows";
 import WorkflowDetail from "@/pages/workflow-detail";
+import WorkflowRuns from "@/pages/workflow-runs";
+import WorkflowRunDetail from "@/pages/workflow-run-detail";
 import SqlEditorPage from "@/pages/sql-editor";
 
 function Router() {
@@ -48,6 +50,8 @@ function Router() {
       <Route path="/machines/:machineId" component={MachineDetail} />
       {/* Workflows */}
       <Route path="/workflows" component={Workflows} />
+      <Route path="/workflow/:id/runs/:runId" component={WorkflowRunDetail} />
+      <Route path="/workflow/:id/runs" component={WorkflowRuns} />
       <Route path="/workflow/:id" component={WorkflowDetail} />
       <Route path="/sql-editor" component={SqlEditorPage} />
       <Route component={NotFound} />

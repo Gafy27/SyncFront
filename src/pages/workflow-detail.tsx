@@ -1,11 +1,12 @@
 import { useRoute, Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { workflows as workflowsApi } from "@/lib/api";
 import { useOrganization } from "@/providers/organization-provider";
 import { useFetchTables, useUpdateTable, useDeleteTable } from "@/hooks/use-tables";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Save, Trash2, LayoutGrid, Code2, TableProperties } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Trash2, LayoutGrid, Code2, TableProperties, Play, Square, OctagonX, ScrollText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { CreateTableDialog } from "@/components/CreateTableDialog";
@@ -36,6 +37,29 @@ export default function WorkflowDetail() {
     const updateTable = useUpdateTable();
     const deleteTable = useDeleteTable();
     const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    const invalidateWorkflow = () => {
+        queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "workflows", workflowId] });
+    };
+
+    const startWorkflow = useMutation({
+        mutationFn: () => workflowsApi.start(selectedOrg!, workflowId!),
+        onSuccess: () => { toast({ title: "Workflow started" }); invalidateWorkflow(); },
+        onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    });
+
+    const stopWorkflow = useMutation({
+        mutationFn: () => workflowsApi.stop(selectedOrg!, workflowId!),
+        onSuccess: () => { toast({ title: "Workflow stopped" }); invalidateWorkflow(); },
+        onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    });
+
+    const terminateWorkflow = useMutation({
+        mutationFn: () => workflowsApi.terminate(selectedOrg!, workflowId!),
+        onSuccess: () => { toast({ title: "Workflow terminated" }); invalidateWorkflow(); },
+        onError: (err: Error) => toast({ title: "Error", description: err.message, variant: "destructive" }),
+    });
 
     const [prevOrg, setPrevOrg] = useState(selectedOrg);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
@@ -133,12 +157,71 @@ export default function WorkflowDetail() {
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                <div className="flex items-center gap-2">
-                    <h1 className="font-bold text-lg">{workflow.name}</h1>
-                    <Badge variant="outline" className="font-mono text-xs">{workflow.window?.type ?? "tumbling"}</Badge>
+                    <div className="flex items-center gap-2">
+                        <h1 className="font-bold text-lg">{workflow.name}</h1>
+                        <Badge variant="outline" className="font-mono text-xs">{workflow.window?.type ?? "tumbling"}</Badge>
+                        {workflow.status && (
+                            <Badge
+                                variant={workflow.status === "running" ? "default" : "secondary"}
+                                className={`text-xs capitalize ${
+                                    workflow.status === "running"
+                                        ? "bg-green-500/15 text-green-600 border-green-500/30"
+                                        : workflow.status === "terminated"
+                                        ? "bg-red-500/15 text-red-600 border-red-500/30"
+                                        : ""
+                                }`}
+                            >
+                                {workflow.status}
+                            </Badge>
+                        )}
+                    </div>
                 </div>
-                </div>
                 <div className="flex items-center gap-2">
+                    {/* Lifecycle actions */}
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-green-600 border-green-500/40 hover:bg-green-500/10"
+                        disabled={workflow.status === "running" || startWorkflow.isPending}
+                        onClick={() => startWorkflow.mutate()}
+                    >
+                        {startWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-green-600" />}
+                        Start
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        disabled={workflow.status !== "running" || stopWorkflow.isPending}
+                        onClick={() => stopWorkflow.mutate()}
+                    >
+                        {stopWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Square className="h-3.5 w-3.5" />}
+                        Stop
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10"
+                        disabled={workflow.status !== "running" || terminateWorkflow.isPending}
+                        onClick={() => {
+                            if (!confirm(`Terminate workflow "${workflow.name}"? This will forcefully stop execution.`)) return;
+                            terminateWorkflow.mutate();
+                        }}
+                    >
+                        {terminateWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <OctagonX className="h-3.5 w-3.5" />}
+                        Terminate
+                    </Button>
+                    <div className="w-px h-5 bg-border mx-1" />
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        onClick={() => setLocation(`/workflow/${workflowId}/runs`)}
+                    >
+                        <ScrollText className="h-3.5 w-3.5" />
+                        Logs
+                    </Button>
+                    <div className="w-px h-5 bg-border mx-1" />
                     <CreateTableDialog workflowId={workflow.id} workflowType={workflow.type} />
                 </div>
             </header>

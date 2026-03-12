@@ -108,6 +108,8 @@ export interface Workflow {
   name: string;
   /** "stream" (real-time, event-driven) or "batch" (windowed/scheduled) */
   type: "stream" | "batch";
+  /** Runtime lifecycle state */
+  status?: "running" | "stopped" | "terminated" | "idle";
   /** Streaming only: event names that trigger processing */
   triggers?: string[];
   /** Batch only: window schedule config */
@@ -152,6 +154,50 @@ export interface WorkflowCreatePayload {
   description?: string | null;
   is_enabled?: boolean;
   tables?: unknown[];
+}
+
+// ─── Workflow Runs & Activity Logs ──────────────────────────
+
+export interface WorkflowRun {
+  ts: string;
+  run_id: string;
+  workflow_id: string;
+  status: "running" | "completed" | "failed";
+  duration_ms: number;
+  started_at: number;
+  completed_at: number;
+  workflow_log: Record<string, unknown>;
+}
+
+export interface RunsListResponse {
+  workflow_id: string;
+  items: WorkflowRun[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
+}
+
+export interface ActivityLog {
+  ts: string;
+  run_id: string;
+  workflow_id: string;
+  activity_name: string;
+  status: "running" | "completed" | "failed";
+  duration_ms: number;
+  started_at: number;
+  completed_at: number;
+  activity_log: Record<string, unknown>;
+}
+
+export interface ActivitiesListResponse {
+  workflow_id: string;
+  run_id: string;
+  items: ActivityLog[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
 }
 
 // ─── API Response Shapes ────────────────────────────────────
