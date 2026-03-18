@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Radio } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EventsTable } from "@/components/events-table";
 import type { OrgEvent } from "@/lib/types";
@@ -279,21 +279,23 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="p-10">
-      <div className="text-sm text-muted-foreground mb-6">
-        SYNC / <span className="text-foreground">Eventos</span>
-      </div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-semibold" data-testid="text-page-title">
-          Eventos
-        </h1>
+    <div className="flex flex-col h-full bg-background">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <Radio className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Eventos</span>
+        </div>
         <CreateEventDialog />
       </div>
 
-      <EventsTable
-        events={events}
-        onDelete={(id) => deleteEvent.mutate(id)}
-      />
+      {/* Table */}
+      <div className="px-6 pt-4">
+        <EventsTable
+          events={events}
+          onDelete={(id) => deleteEvent.mutate(id)}
+        />
+      </div>
     </div>
   );
 }

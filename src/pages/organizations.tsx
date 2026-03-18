@@ -1,5 +1,4 @@
-import { Plus, Building2 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Building2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
@@ -16,6 +15,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Organization, OrgStats } from "@/lib/types";
@@ -41,11 +46,7 @@ export default function Organizations() {
       });
     },
     onError: (err: Error) => {
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
 
@@ -53,58 +54,53 @@ export default function Organizations() {
     if (!newOrgName.trim()) return;
     createMutation.mutate({
       name: newOrgName.trim(),
-      slug:
-        newOrgSlug.trim() ||
-        newOrgName.trim().toLowerCase().replace(/\s+/g, "-"),
+      slug: newOrgSlug.trim() || newOrgName.trim().toLowerCase().replace(/\s+/g, "-"),
       status: "active",
     });
   };
 
   return (
-    <div className="p-10">
-      <div className="text-sm text-muted-foreground mb-6">
-        SYNC / <span className="text-foreground">Organizaciones</span>
-      </div>
-
-      <div className="flex items-center justify-between mb-8">
-        <h1
-          className="text-3xl font-semibold"
-          data-testid="text-page-title"
-        >
-          Organizaciones
-        </h1>
+    <div className="flex flex-col h-full bg-background">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Organizaciones</span>
+        </div>
         <Button
+          size="sm"
           data-testid="button-add-organization"
           onClick={() => setIsCreateOpen(true)}
+          className="h-8 text-xs"
         >
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Organizacion
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          Nueva Organización
         </Button>
       </div>
 
-      {isLoading && (
-        <div className="text-muted-foreground mb-4">
-          Cargando organizaciones...
-        </div>
-      )}
+      {/* Grid */}
+      <div className="p-6">
+        {isLoading && (
+          <div className="text-muted-foreground text-sm">Cargando organizaciones...</div>
+        )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {organizations.map((org) => (
-          <OrgCard
-            key={org.id}
-            org={org}
-            onClick={() => setLocation(`/organizations/${org.id}`)}
-          />
-        ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {organizations.map((org) => (
+            <OrgCard
+              key={org.id}
+              org={org}
+              onClick={() => setLocation(`/organizations/${org.id}`)}
+            />
+          ))}
+        </div>
       </div>
 
+      {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Nueva Organizacion</DialogTitle>
-            <DialogDescription>
-              Cree una nueva organizacion para su equipo
-            </DialogDescription>
+            <DialogDescription>Cree una nueva organizacion para su equipo</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -126,16 +122,10 @@ export default function Organizations() {
               />
             </div>
             <div className="flex justify-end gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
                 Cancelar
               </Button>
-              <Button
-                onClick={handleCreate}
-                disabled={createMutation.isPending}
-              >
+              <Button onClick={handleCreate} disabled={createMutation.isPending}>
                 {createMutation.isPending ? "Creando..." : "Crear"}
               </Button>
             </div>
@@ -146,80 +136,76 @@ export default function Organizations() {
   );
 }
 
-function OrgCard({
-  org,
-  onClick,
-}: {
-  org: Organization;
-  onClick: () => void;
-}) {
-  // Fetch org stats (optional - won't crash if endpoint doesn't exist)
+function OrgCard({ org, onClick }: { org: Organization; onClick: () => void }) {
   const { data: stats } = useQuery<OrgStats>({
     queryKey: ["org-stats", org.id],
     queryFn: () => orgsApi.stats(org.id),
     retry: false,
   });
 
+  const isActive = org.status === "active";
+
   return (
-    <Card
-      className="hover:shadow-md transition-shadow cursor-pointer"
+    <div
       data-testid={`card-organization-${org.id}`}
       onClick={onClick}
+      className="group relative flex items-start gap-3 p-4 rounded-lg bg-muted/40 border border-border/50 hover:border-border hover:bg-muted/60 transition-all cursor-pointer"
     >
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <CardTitle
-                className="text-lg"
-                data-testid={`text-org-name-${org.id}`}
-              >
-                {org.name}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {org.slug}
-              </p>
-            </div>
+      {/* Icon */}
+      <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center bg-background rounded-md border border-border/50">
+        <Building2 className="w-5 h-5 text-muted-foreground" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span
+              className="text-[14px] font-semibold text-foreground truncate"
+              data-testid={`text-org-name-${org.id}`}
+            >
+              {org.name}
+            </span>
+            <span className="text-[12px] text-muted-foreground truncate">{org.slug}</span>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="h-6 w-6 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-muted transition-all text-muted-foreground shrink-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClick(); }}>
+                Ver detalle
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Badges */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           <Badge
-            variant="secondary"
-            className={
-              org.status === "active"
-                ? "bg-green-100 text-green-700 border-green-200"
-                : ""
-            }
+            variant="outline"
+            className={`text-[11px] px-1.5 py-0 h-5 ${isActive ? "border-green-500/50 text-green-600 dark:text-green-400 bg-green-500/10" : ""}`}
           >
-            {org.status === "active" ? "Activa" : org.status}
+            {isActive ? "ACTIVE" : org.status?.toUpperCase()}
           </Badge>
+          {stats && (
+            <>
+              {stats.bridges_count !== undefined && (
+                <Badge variant="outline" className="text-[11px] px-1.5 py-0 h-5 font-mono">
+                  {stats.bridges_count} bridges
+                </Badge>
+              )}
+              {stats.machines_count !== undefined && (
+                <Badge variant="outline" className="text-[11px] px-1.5 py-0 h-5 font-mono">
+                  {stats.machines_count} máq.
+                </Badge>
+              )}
+            </>
+          )}
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div className="space-y-1">
-            <div className="text-2xl font-semibold">
-              {stats?.bridges_count ?? "-"}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Bridges
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-semibold">
-              {stats?.machines_count ?? "-"}
-            </div>
-            <div className="text-xs text-muted-foreground">Máquinas</div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-semibold">
-              {stats?.events_count ?? "-"}
-            </div>
-            <div className="text-xs text-muted-foreground">Eventos</div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

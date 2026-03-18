@@ -5,7 +5,7 @@ import type { Machine } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Plus } from "lucide-react";
+import { Plus, Cpu } from "lucide-react";
 import { MachinesTable } from "@/components/machines-table";
 
 export default function MachinesPage() {
@@ -14,7 +14,7 @@ export default function MachinesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: machineList = [], isLoading } = useQuery<Machine[]>({
+  const { data: machineList = [] } = useQuery<Machine[]>({
     queryKey: ["organizations", selectedOrg, "machines"],
     queryFn: async () => {
       const res = await machinesApi.list(selectedOrg!);
@@ -49,25 +49,32 @@ export default function MachinesPage() {
   }
 
   return (
-    <div className="p-10">
-      <div className="text-sm text-muted-foreground mb-6">
-        SYNC / <span className="text-foreground">Máquinas</span>
-      </div>
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-semibold" data-testid="text-page-title">
-          Máquinas
-        </h1>
-        <Button onClick={() => setLocation("/machines/new")} data-testid="button-add-machine">
-          <Plus className="w-4 h-4 mr-2" />
+    <div className="flex flex-col h-full bg-background">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <Cpu className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Máquinas</span>
+        </div>
+        <Button
+          size="sm"
+          onClick={() => setLocation("/machines/new")}
+          data-testid="button-add-machine"
+          className="h-8 text-xs"
+        >
+          <Plus className="w-3.5 h-3.5 mr-1" />
           Nueva Máquina
         </Button>
       </div>
 
-      <MachinesTable
-        machines={machineList}
-        onRowClick={(machineId: string) => setLocation(`/machines/${machineId}`)}
-        onDelete={(machineId: string) => deleteMachine.mutate(machineId)}
-      />
+      {/* Table */}
+      <div className="px-6 pt-4">
+        <MachinesTable
+          machines={machineList}
+          onRowClick={(machineId: string) => setLocation(`/machines/${machineId}`)}
+          onDelete={(machineId: string) => deleteMachine.mutate(machineId)}
+        />
+      </div>
     </div>
   );
 }

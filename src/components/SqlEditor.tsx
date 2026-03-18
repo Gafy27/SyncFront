@@ -52,7 +52,7 @@ function applyEditorTheme(monaco: any, isDark: boolean) {
         ],
         colors: {
             "editor.background": bg,
-            "editor.foreground": fg,
+            "editor.foreground": isDark ? "#d4d4d4" : fg,
             "editor.lineHighlightBackground": card,
             "editorLineNumber.foreground": muted,
         },
