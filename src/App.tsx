@@ -7,6 +7,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AgentChatPanel } from "@/components/agent-chat-panel";
+import { Bot } from "lucide-react";
 import { OrganizationProvider } from "@/providers/organization-provider";
 import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -63,6 +65,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!localStorage.getItem("auth_token")
   );
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setIsAuthenticated(false);
@@ -91,17 +94,30 @@ function App() {
       <TooltipProvider>
         <OrganizationProvider>
           <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
+            <div className="flex h-screen w-full overflow-hidden">
               <AppSidebar />
-              <div className="flex flex-col flex-1">
-                <header className="flex items-center justify-between p-4 border-b">
-                  <SidebarTrigger data-testid="button-sidebar-toggle" />
-                  <ThemeToggle />
+              <div className="flex flex-col flex-1 min-w-0">
+                <header className="flex items-center justify-between px-4 py-2 border-b border-border/40">
+                  <SidebarTrigger data-testid="button-sidebar-toggle" className="h-7 w-7 text-muted-foreground hover:text-foreground" />
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsChatOpen((v) => !v)}
+                      className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Toggle Agent"
+                    >
+                      <Bot className="h-3.5 w-3.5" />
+                    </button>
+                    <ThemeToggle />
+                  </div>
                 </header>
-                <main className="flex-1 overflow-auto">
+                <main className="flex-1 overflow-auto no-scrollbar">
                   <Router />
                 </main>
               </div>
+              <AgentChatPanel
+                open={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+              />
             </div>
           </SidebarProvider>
         </OrganizationProvider>

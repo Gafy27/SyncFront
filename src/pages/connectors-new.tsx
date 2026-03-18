@@ -15,6 +15,9 @@ import { bridges as bridgesApi, API_BASE_URL, getAuthToken } from "@/lib/api";
 import { useOrganization } from "@/providers/organization-provider";
 import { getConnectorIconUrl } from "@/utils/connectorIcons";
 
+type TopicEntry = { name: string; decoder: string };
+type FieldValue = string | number | boolean | TopicEntry[];
+
 interface ConnectorVariable {
   name: string;
   type: string;
@@ -36,14 +39,63 @@ interface ConnectorTemplate {
 }
 
 function getInputType(variable: ConnectorVariable): string {
-  if (variable.type === "integer" || variable.type === "number") return "number";
+  if (variable.type === "integer" || variable.type === "number" || variable.type === "port") return "number";
   if (
     variable.type === "password" ||
+    variable.type === "secret" ||
     variable.name.toLowerCase().includes("password") ||
     variable.name.toLowerCase().includes("token")
   )
     return "password";
   return "text";
+}
+
+function TopicsEditor({
+  topics,
+  onChange,
+}: {
+  topics: TopicEntry[];
+  onChange: (topics: TopicEntry[]) => void;
+}) {
+  const addTopic = () => onChange([...topics, { name: "", decoder: "" }]);
+  const removeTopic = (i: number) =>
+    onChange(topics.filter((_, idx) => idx !== i));
+  const updateTopic = (i: number, field: "name" | "decoder", value: string) =>
+    onChange(topics.map((t, idx) => (idx === i ? { ...t, [field]: value } : t)));
+
+  return (
+    <div className="space-y-2">
+      {topics.map((topic, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <Input
+            value={topic.name}
+            onChange={(e) => updateTopic(i, "name", e.target.value)}
+            placeholder="topic name"
+            className="font-mono text-sm flex-1"
+          />
+          <Input
+            value={topic.decoder}
+            onChange={(e) => updateTopic(i, "decoder", e.target.value)}
+            placeholder="decoder path"
+            className="font-mono text-sm flex-1"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+            onClick={() => removeTopic(i)}
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={addTopic}>
+        <Plus className="w-3 h-3 mr-1" />
+        Agregar topic
+      </Button>
+    </div>
+  );
 }
 
 function VariableFields({
@@ -53,8 +105,8 @@ function VariableFields({
   placeholder,
 }: {
   variables: ConnectorVariable[];
-  values: Record<string, string>;
-  onChange: (key: string, value: string) => void;
+  values: Record<string, FieldValue>;
+  onChange: (key: string, value: FieldValue) => void;
   placeholder?: string;
 }) {
   if (!variables || variables.length === 0) {
@@ -63,17 +115,57 @@ function VariableFields({
   return (
     <div className="space-y-4">
       {variables.map((v) => {
+        const label =
+          v.label || v.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+
+        if (v.type === "array") {
+          const topics = Array.isArray(values[v.name])
+            ? (values[v.name] as TopicEntry[])
+            : [];
+          return (
+            <div key={v.name} className="space-y-2">
+              <Label>
+                {label}
+                {v.required && <span className="text-destructive ml-1">*</span>}
+              </Label>
+              <div className="flex gap-2 mb-1 text-xs text-muted-foreground font-medium px-0.5">
+                <span className="flex-1">Topic name</span>
+                <span className="flex-1">Decoder</span>
+                <span className="w-8" />
+              </div>
+              <TopicsEditor topics={topics} onChange={(val) => onChange(v.name, val)} />
+            </div>
+          );
+        }
+
+        if (v.type === "boolean") {
+          const checked = values[v.name] === true || values[v.name] === "true";
+          return (
+            <div key={v.name} className="flex items-center gap-3">
+              <Switch
+                id={`field-${v.name}`}
+                checked={checked}
+                onCheckedChange={(val) => onChange(v.name, val)}
+              />
+              <Label htmlFor={`field-${v.name}`} className="cursor-pointer">
+                {label}
+                {v.required && <span className="text-destructive ml-1">*</span>}
+              </Label>
+            </div>
+          );
+        }
+
         const inputType = getInputType(v);
         return (
           <div key={v.name} className="space-y-2">
             <Label htmlFor={`field-${v.name}`}>
-              {v.label || v.name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+              {label}
               {v.required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
               id={`field-${v.name}`}
               type={inputType}
-              value={values[v.name] ?? ""}
+              value={typeof values[v.name] === "string" || typeof values[v.name] === "number" ? String(values[v.name]) : ""}
               onChange={(e) => onChange(v.name, e.target.value)}
               placeholder={placeholder ?? (v.default != null ? String(v.default) : "")}
             />
@@ -96,9 +188,9 @@ export default function NewBridge() {
   // Step 2: form state
   const [name, setName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
-  const [baseFields, setBaseFields] = useState<Record<string, string>>({});
+  const [baseFields, setBaseFields] = useState<Record<string, FieldValue>>({});
   const [variantEnvs, setVariantEnvs] = useState<string[]>(["dev", "prod"]);
-  const [variantFields, setVariantFields] = useState<Record<string, Record<string, string>>>({
+  const [variantFields, setVariantFields] = useState<Record<string, Record<string, FieldValue>>>({
     dev: {},
     prod: {},
   });
@@ -175,11 +267,11 @@ export default function NewBridge() {
     setLocation(`/bridges/new/${id}`);
   };
 
-  const handleBaseChange = (key: string, value: string) => {
+  const handleBaseChange = (key: string, value: FieldValue) => {
     setBaseFields((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleVariantChange = (env: string, key: string, value: string) => {
+  const handleVariantChange = (env: string, key: string, value: FieldValue) => {
     setVariantFields((prev) => ({
       ...prev,
       [env]: { ...(prev[env] ?? {}), [key]: value },
@@ -210,17 +302,20 @@ export default function NewBridge() {
     e.preventDefault();
     if (!selectedTemplate || !selectedOrg) return;
 
-    // Strip empty values
+    // Strip empty values (keep booleans and non-empty strings/arrays)
+    const isEmpty = (v: FieldValue) =>
+      Array.isArray(v) ? v.length === 0 : typeof v === "boolean" ? false : v === "";
+
     const base: Record<string, any> = {};
     Object.entries(baseFields).forEach(([k, v]) => {
-      if (v !== "") base[k] = v;
+      if (!isEmpty(v)) base[k] = v;
     });
 
     const variants: Record<string, Record<string, any>> = {};
     variantEnvs.forEach((env) => {
       const envFields: Record<string, any> = {};
       Object.entries(variantFields[env] ?? {}).forEach(([k, v]) => {
-        if (v !== "") envFields[k] = v;
+        if (!isEmpty(v)) envFields[k] = v;
       });
       if (Object.keys(envFields).length > 0) {
         variants[env] = envFields;

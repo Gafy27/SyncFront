@@ -14,7 +14,7 @@ export default function MachinesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: machineList = [] } = useQuery<Machine[]>({
+  const { data: machineList = [], isLoading } = useQuery<Machine[]>({
     queryKey: ["organizations", selectedOrg, "machines"],
     queryFn: async () => {
       const res = await machinesApi.list(selectedOrg!);
@@ -53,7 +53,6 @@ export default function MachinesPage() {
       <div className="text-sm text-muted-foreground mb-6">
         SYNC / <span className="text-foreground">Máquinas</span>
       </div>
-
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-semibold" data-testid="text-page-title">
           Máquinas

@@ -1,22 +1,30 @@
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useOrganization } from "@/providers/organization-provider";
 import { events as eventsApi } from "@/lib/api";
-import type { OrgEvent } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { EventsTable } from "@/components/events-table";
-
+import { useOrganization } from "@/providers/organization-provider";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -24,438 +32,211 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { EventsTable } from "@/components/events-table";
+import type { OrgEvent } from "@/lib/types";
 
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-const EVENT_TYPES = ["FLOAT", "INT", "BOOL", "STR"] as const;
-
-const formSchema = z.object({
-  event: z.string().min(1, "Event name required"),
-  type: z.string().optional(),
-  values_range_min: z.string().optional(),
-  values_range_max: z.string().optional(),
+const eventSchema = z.object({
+  event: z.string().min(1, "El nombre del evento es obligatorio"),
+  topic: z.string().optional(),
+  type: z.enum(["FLOAT", "INT", "BOOL", "STRING"]).default("FLOAT"),
+  values_range: z.array(z.number()).length(2).optional(),
+  auth_values: z.array(z.string()).optional(),
   authenticate: z.boolean().default(false),
   is_counter: z.boolean().default(false),
   remove_duplicates: z.boolean().default(false),
 });
-type FormData = z.infer<typeof formSchema>;
+
+type EventFormValues = z.infer<typeof eventSchema>;
 
 function CreateEventDialog() {
   const [open, setOpen] = useState(false);
-  const [authValues, setAuthValues] = useState<string[]>([]);
-  const [authInput, setAuthInput] = useState("");
   const { selectedOrg } = useOrganization();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventSchema),
     defaultValues: {
       event: "",
+      topic: "",
       type: "FLOAT",
-      values_range_min: "",
-      values_range_max: "",
       authenticate: false,
       is_counter: false,
       remove_duplicates: false,
     },
   });
 
-  const selectedType = watch("type");
-
-  const addAuthValue = () => {
-    const v = authInput.trim();
-    if (v && !authValues.includes(v)) {
-      setAuthValues((prev) => [...prev, v]);
-    }
-    setAuthInput("");
-  };
-
-  const removeAuthValue = (v: string) => {
-    setAuthValues((prev) => prev.filter((x) => x !== v));
-  };
-
-  const createEvent = useMutation({
-    mutationFn: (data: FormData) => {
-      if (!selectedOrg) throw new Error("Organization required");
-      const payload: Partial<OrgEvent> = {
-        event: data.event,
-        type: data.type || undefined,
-        authenticate: data.authenticate,
-        is_counter: data.is_counter,
-        remove_duplicates: data.remove_duplicates,
-      };
-      if ((selectedType === "FLOAT" || selectedType === "INT")) {
-        const min = data.values_range_min !== "" ? Number(data.values_range_min) : undefined;
-        const max = data.values_range_max !== "" ? Number(data.values_range_max) : undefined;
-        if (min !== undefined && max !== undefined) {
-          payload.values_range = [min, max];
-        }
-      }
-      if (selectedType === "STR" && authValues.length > 0) {
-        (payload as any).auth_values = authValues;
-      }
-      if (import.meta.env.DEV) console.log("[API] POST events payload", payload);
-      return eventsApi.create(selectedOrg, payload);
-    },
+  const createMutation = useMutation({
+    mutationFn: (data: EventFormValues) => eventsApi.create(selectedOrg!, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "events"] });
+      queryClient.invalidateQueries({
+        queryKey: ["organizations", selectedOrg, "events"],
+      });
       toast({ title: "Evento creado" });
       setOpen(false);
-      reset();
-      setAuthValues([]);
-      setAuthInput("");
+      form.reset();
     },
     onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { reset(); setAuthValues([]); setAuthInput(""); } }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button data-testid="button-add-event">
+        <Button data-testid="button-create-event">
           <Plus className="w-4 h-4 mr-2" />
           Nuevo Evento
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[640px]">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Crear Evento</DialogTitle>
+          <DialogTitle>Crear Nuevo Evento</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit((d) => createEvent.mutate(d))} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Nombre del evento *</Label>
-            <Input {...register("event")} placeholder="ej: power, temperature" className="font-mono" />
-            {errors.event && <p className="text-sm text-destructive">{errors.event.message}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de dato</Label>
-            <Controller
-              control={control}
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((data) => createMutation.mutate(data))}
+            className="space-y-4 pt-4"
+          >
+            <FormField
+              control={form.control}
+              name="event"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre del Evento</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ej: temperatura" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="topic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="ej: sensor/temp" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="type"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {EVENT_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormItem>
+                  <FormLabel>Tipo de Dato</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="FLOAT">Float</SelectItem>
+                      <SelectItem value="INT">Integer</SelectItem>
+                      <SelectItem value="BOOL">Boolean</SelectItem>
+                      <SelectItem value="STRING">String</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
             />
-          </div>
 
-          {/* Values range — only for FLOAT and INT */}
-          {(selectedType === "FLOAT" || selectedType === "INT") && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Valor mínimo</Label>
-                <Input {...register("values_range_min")} type="number" placeholder="ej: 0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor máximo</Label>
-                <Input {...register("values_range_max")} type="number" placeholder="ej: 200" />
-              </div>
+              <FormField
+                control={form.control}
+                name="authenticate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Autenticar</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="is_counter"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Es Contador</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
-          )}
 
-          {/* Auth values — only for STRING */}
-          {selectedType === "STR" && (
-            <div className="space-y-2">
-              <Label>Valores autorizados</Label>
-              <p className="text-xs text-muted-foreground">Valores permitidos para este evento</p>
-              <div className="flex gap-2">
-                <Input
-                  value={authInput}
-                  onChange={(e) => setAuthInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAuthValue(); } }}
-                  placeholder="ej: SETUP, RUN, STOP"
-                  className="font-mono"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addAuthValue} disabled={!authInput.trim()}>
-                  Add
-                </Button>
-              </div>
-              {authValues.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {authValues.map((v) => (
-                    <Badge key={v} variant="secondary" className="gap-1 pr-1 font-mono">
-                      {v}
-                      <button type="button" onClick={() => removeAuthValue(v)} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-3 pt-2 border-t">
-            <Label className="text-sm font-medium">Flags</Label>
-            <Controller
-              control={control}
-              name="authenticate"
-              render={({ field }) => (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="authenticate" className="font-normal">Autenticación requerida</Label>
-                    <p className="text-xs text-muted-foreground">El evento requiere autenticación</p>
-                  </div>
-                  <Switch
-                    id="authenticate"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
-              )}
-            />
-            <Controller
-              control={control}
-              name="is_counter"
-              render={({ field }) => (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="is_counter" className="font-normal">Es contador</Label>
-                    <p className="text-xs text-muted-foreground">El valor es acumulativo</p>
-                  </div>
-                  <Switch
-                    id="is_counter"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
-              )}
-            />
-            <Controller
-              control={control}
+            <FormField
+              control={form.control}
               name="remove_duplicates"
               render={({ field }) => (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="remove_duplicates" className="font-normal">Quitar duplicados</Label>
-                    <p className="text-xs text-muted-foreground">Eliminar eventos duplicados en ventana</p>
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-3">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Eliminar Duplicados</FormLabel>
+                    <FormDescription>
+                      Ignorar eventos con el mismo valor consecutivos.
+                    </FormDescription>
                   </div>
-                  <Switch
-                    id="remove_duplicates"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </div>
+                </FormItem>
               )}
             />
-          </div>
 
-          <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={createEvent.isPending}>
-              {createEvent.isPending ? "Creando..." : "Crear Evento"}
-            </Button>
-          </div>
-        </form>
+            <DialogFooter>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createMutation.isPending}
+              >
+                {createMutation.isPending ? "Creando..." : "Crear Evento"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
 }
-
-// ─── Edit Dialog ─────────────────────────────────────────────
-
-const editSchema = z.object({
-  event: z.string().min(1, "Event name required"),
-  type: z.string().optional(),
-  values_range_min: z.string().optional(),
-  values_range_max: z.string().optional(),
-  authenticate: z.boolean().default(false),
-  is_counter: z.boolean().default(false),
-  remove_duplicates: z.boolean().default(false),
-});
-type EditFormData = z.infer<typeof editSchema>;
-
-interface EditEventDialogProps {
-  event: OrgEvent | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-function EditEventDialog({ event, open, onOpenChange }: EditEventDialogProps) {
-  const [authValues, setAuthValues] = useState<string[]>([]);
-  const [authInput, setAuthInput] = useState("");
-  const { selectedOrg } = useOrganization();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  const { register, handleSubmit, reset, control, watch, setValue } = useForm<EditFormData>({
-    resolver: zodResolver(editSchema),
-    defaultValues: { event: "", type: "FLOAT", authenticate: false, is_counter: false, remove_duplicates: false },
-  });
-
-  const selectedType = watch("type");
-
-  // Pre-fill form when dialog opens or event changes
-  useEffect(() => {
-    if (open && event) {
-      reset({
-        event: event.event,
-        type: event.type || "FLOAT",
-        values_range_min: event.values_range?.[0] !== undefined ? String(event.values_range[0]) : "",
-        values_range_max: event.values_range?.[1] !== undefined ? String(event.values_range[1]) : "",
-        authenticate: event.authenticate || false,
-        is_counter: event.is_counter || false,
-        remove_duplicates: event.remove_duplicates || false,
-      });
-      setAuthValues(event.auth_values || []);
-      setAuthInput("");
-    }
-  }, [open, event, reset]);
-
-  const addAuthValue = () => {
-    const v = authInput.trim();
-    if (v && !authValues.includes(v)) setAuthValues((prev) => [...prev, v]);
-    setAuthInput("");
-  };
-
-  const updateEvent = useMutation({
-    mutationFn: (data: EditFormData) => {
-      if (!selectedOrg || !event?.id) throw new Error("Organization or event ID required");
-      const payload: Record<string, unknown> = {
-        event: data.event,
-        type: data.type || undefined,
-        authenticate: data.authenticate,
-        is_counter: data.is_counter,
-        remove_duplicates: data.remove_duplicates,
-      };
-      if (selectedType === "FLOAT" || selectedType === "INT") {
-        const min = data.values_range_min !== "" ? Number(data.values_range_min) : undefined;
-        const max = data.values_range_max !== "" ? Number(data.values_range_max) : undefined;
-        if (min !== undefined && max !== undefined) payload.values_range = [min, max];
-      } else if (selectedType === "STR" && authValues.length > 0) {
-        payload.auth_values = authValues;
-      }
-      return eventsApi.update(selectedOrg, event.id!, payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "events"] });
-      toast({ title: "Evento actualizado" });
-      onOpenChange(false);
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[640px]">
-        <DialogHeader>
-          <DialogTitle>Editar Evento</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit((d) => updateEvent.mutate(d))} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Nombre del evento</Label>
-            <Input {...register("event")} className="font-mono" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de dato</Label>
-            <Controller control={control} name="type" render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {EVENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            )} />
-          </div>
-
-          {(selectedType === "FLOAT" || selectedType === "INT") && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Valor mínimo</Label>
-                <Input {...register("values_range_min")} type="number" placeholder="ej: 0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Valor máximo</Label>
-                <Input {...register("values_range_max")} type="number" placeholder="ej: 200" />
-              </div>
-            </div>
-          )}
-
-          {selectedType === "STR" && (
-            <div className="space-y-2">
-              <Label>Valores autorizados</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={authInput}
-                  onChange={(e) => setAuthInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAuthValue(); } }}
-                  placeholder="ej: SETUP, RUN, STOP"
-                  className="font-mono"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={addAuthValue} disabled={!authInput.trim()}>Add</Button>
-              </div>
-              {authValues.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-1">
-                  {authValues.map((v) => (
-                    <Badge key={v} variant="secondary" className="gap-1 pr-1 font-mono">
-                      {v}
-                      <button type="button" onClick={() => setAuthValues((p) => p.filter((x) => x !== v))} className="hover:text-destructive">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-3 pt-2 border-t">
-            <Label className="text-sm font-medium">Flags</Label>
-            {(["authenticate", "is_counter", "remove_duplicates"] as const).map((field) => (
-              <Controller key={field} control={control} name={field} render={({ field: f }) => (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="font-normal">
-                      {field === "authenticate" ? "Autenticación requerida" : field === "is_counter" ? "Es contador" : "Quitar duplicados"}
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      {field === "authenticate" ? "El evento requiere autenticación" : field === "is_counter" ? "El valor es acumulativo" : "Eliminar eventos duplicados en ventana"}
-                    </p>
-                  </div>
-                  <Switch checked={f.value} onCheckedChange={f.onChange} />
-                </div>
-              )} />
-            ))}
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={updateEvent.isPending}>
-              {updateEvent.isPending ? "Guardando..." : "Guardar Cambios"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────
 
 export default function EventsPage() {
   const { selectedOrg } = useOrganization();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [selectedEvent, setSelectedEvent] = useState<OrgEvent | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
 
-  const { data: orgEvents = [], isLoading, isError } = useQuery<OrgEvent[]>({
+  const { data: events = [], isLoading } = useQuery<OrgEvent[]>({
     queryKey: ["organizations", selectedOrg, "events"],
     queryFn: async () => {
       const res = await eventsApi.list(selectedOrg!);
@@ -473,18 +254,26 @@ export default function EventsPage() {
   const deleteEvent = useMutation({
     mutationFn: (eventId: string) => eventsApi.delete(selectedOrg!, eventId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organizations", selectedOrg, "events"] });
+      queryClient.invalidateQueries({
+        queryKey: ["organizations", selectedOrg, "events"],
+      });
       toast({ title: "Evento eliminado" });
     },
     onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive",
+      });
     },
   });
 
   if (!selectedOrg) {
     return (
       <div className="p-10">
-        <p className="text-muted-foreground">Selecciona una organización para ver los eventos.</p>
+        <p className="text-muted-foreground">
+          Selecciona una organización para ver los eventos.
+        </p>
       </div>
     );
   }
@@ -494,7 +283,6 @@ export default function EventsPage() {
       <div className="text-sm text-muted-foreground mb-6">
         SYNC / <span className="text-foreground">Eventos</span>
       </div>
-
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-semibold" data-testid="text-page-title">
           Eventos
@@ -502,23 +290,9 @@ export default function EventsPage() {
         <CreateEventDialog />
       </div>
 
-      {isLoading && <div className="text-muted-foreground">Cargando eventos...</div>}
-      {isError && <div className="text-destructive">Error al cargar eventos.</div>}
-
-      {!isLoading && !isError && (
-        <EventsTable
-          events={orgEvents}
-          onDelete={(id) => deleteEvent.mutate(id)}
-          onRowClick={(id) => {
-            const ev = orgEvents.find((e) => e.id === id);
-            if (ev) { setSelectedEvent(ev); setEditOpen(true); }
-          }}
-        />
-      )}
-      <EditEventDialog
-        event={selectedEvent}
-        open={editOpen}
-        onOpenChange={setEditOpen}
+      <EventsTable
+        events={events}
+        onDelete={(id) => deleteEvent.mutate(id)}
       />
     </div>
   );

@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -7,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
@@ -36,59 +36,64 @@ export function EventsTable({ events, onDelete, onRowClick }: EventsTableProps) 
             <TableBody>
               {events.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     No hay eventos registrados
                   </TableCell>
                 </TableRow>
               ) : (
                 events.map((ev) => (
                   <TableRow
-                    key={ev.id ?? ev.event}
-                    data-testid={`row-event-${ev.event}`}
-                    className={onRowClick ? "hover-elevate cursor-pointer" : ""}
+                    key={ev.id || ev.event}
+                    className={onRowClick ? "cursor-pointer" : ""}
                     onClick={() => onRowClick && ev.id && onRowClick(ev.id)}
                   >
-                    <TableCell className="text-sm font-medium font-mono">
-                      {ev.event}
+                    <TableCell className="font-medium">{ev.event}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        {ev.type || "FLOAT"}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {ev.type
-                        ? <Badge variant="outline">{ev.type}</Badge>
-                        : <span className="text-muted-foreground">—</span>}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell>
                       {ev.values_range && ev.values_range.length === 2 ? (
-                        <span className="font-mono">{ev.values_range[0]} – {ev.values_range[1]}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {ev.values_range[0]} – {ev.values_range[1]}
+                        </span>
                       ) : ev.auth_values && ev.auth_values.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {ev.auth_values.map((v) => (
-                            <Badge key={v} variant="secondary" className="font-mono text-xs">{v}</Badge>
+                            <Badge key={v} variant="secondary" className="text-[10px]">
+                              {v}
+                            </Badge>
                           ))}
                         </div>
                       ) : (
-                        <span>—</span>
+                        <span className="text-xs text-muted-foreground opacity-30">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm">
-                      <div className="flex flex-wrap gap-1">
-                        {ev.authenticate && <Badge variant="secondary" className="text-xs">Auth</Badge>}
-                        {ev.is_counter && <Badge variant="secondary" className="text-xs">Counter</Badge>}
-                        {ev.remove_duplicates && <Badge variant="secondary" className="text-xs">No dupes</Badge>}
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {ev.authenticate && (
+                          <Badge variant="outline" className="text-[9px] bg-blue-50">AUTH</Badge>
+                        )}
+                        {ev.is_counter && (
+                          <Badge variant="outline" className="text-[9px] bg-purple-50">COUNT</Badge>
+                        )}
+                        {ev.remove_duplicates && (
+                          <Badge variant="outline" className="text-[9px] bg-orange-50">UNIQUE</Badge>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!confirm(`¿Eliminar evento "${ev.event}"?`)) return;
-                          onDelete(ev.id ?? ev.event);
+                          onDelete(ev.id || ev.event);
                         }}
-                        data-testid={`button-delete-event-${ev.event}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -101,3 +106,4 @@ export function EventsTable({ events, onDelete, onRowClick }: EventsTableProps) 
     </Card>
   );
 }
+

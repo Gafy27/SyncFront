@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { LucideIcon } from "lucide-react";
 
 interface KpiCardProps {
@@ -9,16 +8,19 @@ interface KpiCardProps {
   testId?: string;
 }
 
-export function KpiCard({ title, value, icon: Icon, iconColor = "text-primary", testId }: KpiCardProps) {
+export function KpiCard({ title, value, icon: Icon, testId }: KpiCardProps) {
   return (
-    <Card data-testid={testId}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-muted-foreground">{title}</p>
-          <Icon className={`w-5 h-5 ${iconColor}`} />
-        </div>
-        <p className="text-4xl font-semibold" data-testid={`${testId}-value`}>{value}</p>
-      </CardContent>
-    </Card>
+    <div
+      data-testid={testId}
+      className="rounded-lg border border-border/50 bg-card px-5 py-4"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-muted-foreground">{title}</p>
+        <Icon className="h-3.5 w-3.5 text-muted-foreground/50" />
+      </div>
+      <p className="text-2xl font-semibold tracking-tight text-foreground" data-testid={`${testId}-value`}>
+        {value}
+      </p>
+    </div>
   );
 }

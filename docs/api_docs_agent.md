@@ -572,7 +572,7 @@ GET /api/organizations/{org_id}/workflows/{workflow_id}/runs
 GET /api/organizations/{org_id}/workflows/{workflow_id}/runs/{run_id}
 → activity-level detail
 ```
-
+  
 ### 5. Trigger a workflow
 ```
 POST /api/organizations/{org_id}/workflows/{workflow_id}/start

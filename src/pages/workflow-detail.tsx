@@ -163,13 +163,12 @@ export default function WorkflowDetail() {
                         {workflow.status && (
                             <Badge
                                 variant={workflow.status === "running" ? "default" : "secondary"}
-                                className={`text-xs capitalize ${
-                                    workflow.status === "running"
-                                        ? "bg-green-500/15 text-green-600 border-green-500/30"
-                                        : workflow.status === "terminated"
+                                className={`text-xs capitalize ${workflow.status === "running"
+                                    ? "bg-green-500/15 text-green-600 border-green-500/30"
+                                    : workflow.status === "terminated"
                                         ? "bg-red-500/15 text-red-600 border-red-500/30"
                                         : ""
-                                }`}
+                                    }`}
                             >
                                 {workflow.status}
                             </Badge>

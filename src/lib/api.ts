@@ -117,9 +117,9 @@ export const auth = {
     if (token) setAuthToken(token);
     return res;
   },
-  me: () => get<AuthUser>("/api/users/me"),
+  me: () => get<AuthUser>("/api/auth/me"),
   updateMe: (data: Partial<User>) =>
-    put<User>("/api/users/me", data),
+    put<User>("/api/auth/me", data),
 };
 
 // ─── Organizations ──────────────────────────────────────────

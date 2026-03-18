@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -8,7 +6,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AlertTriangle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface Alarm {
   id: string;
@@ -62,73 +61,47 @@ const mockAlarms: Alarm[] = [
   },
 ];
 
-const severityConfig = {
-  critical: {
-    variant: "destructive" as const,
-    label: "Crítica",
-    className: undefined,
-  },
-  warning: {
-    variant: "default" as const,
-    label: "Advertencia",
-    className: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  },
-  info: {
-    variant: "secondary" as const,
-    label: "Info",
-    className: undefined,
-  },
+const severityColors = {
+  critical: "bg-red-100 text-red-700 hover:bg-red-100",
+  warning: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
+  info: "bg-blue-100 text-blue-700 hover:bg-blue-100",
 };
 
 export function AlarmsTable() {
   return (
     <Card data-testid="card-alarms-table">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5" />
-          Últimas Alarmas
-        </CardTitle>
-      </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Timestamp</TableHead>
-              <TableHead>Dispositivo</TableHead>
-              <TableHead>Severidad</TableHead>
-              <TableHead>Mensaje</TableHead>
-              <TableHead>Aplicación</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockAlarms.map((alarm) => {
-              const config = severityConfig[alarm.severity];
-              return (
-                <TableRow key={alarm.id} data-testid={`row-alarm-${alarm.id}`}>
-                  <TableCell className="font-mono text-sm">
-                    {alarm.timestamp}
-                  </TableCell>
-                  <TableCell className="font-mono font-medium">
-                    {alarm.deviceId}
-                  </TableCell>
+        <div className="overflow-x-auto pt-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs font-medium uppercase">Timestamp</TableHead>
+                <TableHead className="text-xs font-medium uppercase">Device ID</TableHead>
+                <TableHead className="text-xs font-medium uppercase">Severidad</TableHead>
+                <TableHead className="text-xs font-medium uppercase">Mensaje</TableHead>
+                <TableHead className="text-xs font-medium uppercase">Aplicación</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockAlarms.map((alarm) => (
+                <TableRow key={alarm.id}>
+                  <TableCell className="font-mono text-xs">{alarm.timestamp}</TableCell>
+                  <TableCell className="font-medium">{alarm.deviceId}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={config.variant}
-                      className={config.className}
-                      data-testid={`badge-severity-${alarm.severity}-${alarm.id}`}
+                    <Badge
+                      variant="secondary"
+                      className={severityColors[alarm.severity]}
                     >
-                      {config.label}
+                      {alarm.severity.toUpperCase()}
                     </Badge>
                   </TableCell>
                   <TableCell>{alarm.message}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {alarm.application}
-                  </TableCell>
+                  <TableCell className="text-muted-foreground">{alarm.application}</TableCell>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
