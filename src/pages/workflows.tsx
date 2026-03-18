@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -75,8 +76,8 @@ export default function WorkflowsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs font-medium uppercase">ID</TableHead>
                   <TableHead className="text-xs font-medium uppercase">Nombre</TableHead>
+                  <TableHead className="text-xs font-medium uppercase">Tipo</TableHead>
                   <TableHead className="text-xs font-medium uppercase">Descripción</TableHead>
                   <TableHead className="text-xs font-medium uppercase">Actualizado</TableHead>
                   <TableHead className="w-12" />
@@ -102,8 +103,12 @@ export default function WorkflowsPage() {
                       className="cursor-pointer"
                       onClick={() => setLocation(`/workflow/${wf.id}`)}
                     >
-                      <TableCell className="font-mono text-xs">{wf.id.slice(0, 8)}</TableCell>
                       <TableCell className="font-medium">{wf.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {wf.type}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{wf.description}</TableCell>
                       <TableCell>{wf.updated_at ? new Date(wf.updated_at).toLocaleString() : "-"}</TableCell>
                       <TableCell>

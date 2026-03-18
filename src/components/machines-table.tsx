@@ -38,7 +38,6 @@ export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableP
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-xs font-medium uppercase">ID</TableHead>
                                 <TableHead className="text-xs font-medium uppercase">Nombre</TableHead>
                                 <TableHead className="text-xs font-medium uppercase">Estado</TableHead>
                                 <TableHead className="text-xs font-medium uppercase">Actualizado</TableHead>
@@ -48,7 +47,7 @@ export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableP
                         <TableBody>
                             {machines.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-8">
+                                    <TableCell colSpan={4} className="text-center py-8">
                                         No hay máquinas registradas
                                     </TableCell>
                                 </TableRow>
@@ -69,7 +68,6 @@ export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableP
                                             onClick={() => onRowClick(id)}
                                             data-testid={`row-machine-${id}`}
                                         >
-                                            <TableCell className="font-mono text-xs">{id.slice(0, 8)}</TableCell>
                                             <TableCell className="font-medium">{machine.name || 'Sin nombre'}</TableCell>
                                             <TableCell>
                                                 <Badge

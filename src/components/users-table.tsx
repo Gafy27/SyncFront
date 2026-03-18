@@ -42,7 +42,6 @@ export function UsersTable({ users }: UsersTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-xs font-medium uppercase">ID</TableHead>
                 <TableHead className="text-xs font-medium uppercase">Nombre</TableHead>
                 <TableHead className="text-xs font-medium uppercase">Email</TableHead>
                 <TableHead className="text-xs font-medium uppercase">Rol</TableHead>
@@ -52,14 +51,13 @@ export function UsersTable({ users }: UsersTableProps) {
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     No hay usuarios registrados
                   </TableCell>
                 </TableRow>
               ) : (
                 users.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-mono text-xs">{user.id.slice(0, 8)}</TableCell>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
