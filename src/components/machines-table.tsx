@@ -36,7 +36,6 @@ export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableP
             <Table className="border-none">
                 <TableHeader className="[&_tr]:border-none">
                     <TableRow className="hover:bg-transparent border-none">
-                        <TableHead className="w-[80px] h-8 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">ID</TableHead>
                         <TableHead className="h-8 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">Máquina</TableHead>
                         <TableHead className="h-8 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">Estado</TableHead>
                         <TableHead className="h-8 text-right text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">Actualizado</TableHead>
@@ -68,9 +67,7 @@ export function MachinesTable({ machines, onRowClick, onDelete }: MachinesTableP
                                     onClick={() => onRowClick(id)}
                                     data-testid={`row-machine-${id}`}
                                 >
-                                    <TableCell className="py-3 font-mono text-[12px] text-muted-foreground/50 align-top">
-                                        {id.slice(0, 6)}
-                                    </TableCell>
+
                                     <TableCell className="py-3 align-top">
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-[14px] font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">

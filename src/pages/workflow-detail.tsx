@@ -6,10 +6,21 @@ import { useOrganization } from "@/providers/organization-provider";
 import { useFetchTables, useUpdateTable, useDeleteTable } from "@/hooks/use-tables";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Save, Trash2, LayoutGrid, Code2, TableProperties, Play, Square, OctagonX, ScrollText } from "lucide-react";
+import { Loader2, ArrowLeft, Save, Trash2, LayoutGrid, Code2, TableProperties, Play, Square, OctagonX, History as HistoryIcon, ChevronUp, ChevronDown, Settings as SettingsIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { CreateTableDialog } from "@/components/CreateTableDialog";
+import { EditWorkflowDialog } from "@/components/EditWorkflowDialog";
 import { DependencyGraph } from "@/components/DependencyGraph";
 import { SqlEditor } from "@/components/SqlEditor";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -67,6 +78,7 @@ export default function WorkflowDetail() {
     const [sqlContent, setSqlContent] = useState<string>("");
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+    const [isEditWorkflowOpen, setIsEditWorkflowOpen] = useState(false);
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Redirect to workflows list when organization changes
@@ -132,6 +144,18 @@ export default function WorkflowDetail() {
         });
     };
 
+    const handleUpdateTableField = (field: keyof WorkflowTable, value: any) => {
+        if (!selectedTableId || !workflowId || !workflow) return;
+        updateTable.mutate({
+            id: selectedTableId,
+            workflowId,
+            workflowType: workflow.type,
+            [field]: value,
+        }, {
+            onError: (err) => toast({ title: "Error", description: err.message, variant: "destructive" })
+        });
+    };
+
     if (isLoading) {
         return <div className="h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
     }
@@ -180,49 +204,71 @@ export default function WorkflowDetail() {
                     <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5 text-green-600 border-green-500/40 hover:bg-green-500/10"
+                        className="gap-2 h-8 text-xs font-semibold bg-muted/10 border-green-500/20 text-foreground hover:bg-green-500/10 hover:border-green-500/40 transition-all"
                         disabled={workflow.status === "running" || startWorkflow.isPending}
                         onClick={() => startWorkflow.mutate()}
                     >
-                        {startWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-green-600" />}
+                        {startWorkflow.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Play className="h-3.5 w-3.5 text-green-500 fill-green-500" />
+                        )}
                         Start
                     </Button>
                     <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5"
+                        className="gap-2 h-8 text-xs font-semibold bg-muted/10 border-amber-500/20 text-foreground hover:bg-amber-500/10 hover:border-amber-500/40 transition-all"
                         disabled={workflow.status !== "running" || stopWorkflow.isPending}
                         onClick={() => stopWorkflow.mutate()}
                     >
-                        {stopWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Square className="h-3.5 w-3.5" />}
+                        {stopWorkflow.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Square className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                        )}
                         Stop
                     </Button>
                     <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10"
+                        className="gap-2 h-8 text-xs font-semibold bg-muted/10 border-red-500/20 text-foreground hover:bg-red-500/10 hover:border-red-500/40 transition-all"
                         disabled={workflow.status !== "running" || terminateWorkflow.isPending}
                         onClick={() => {
                             if (!confirm(`Terminate workflow "${workflow.name}"? This will forcefully stop execution.`)) return;
                             terminateWorkflow.mutate();
                         }}
                     >
-                        {terminateWorkflow.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <OctagonX className="h-3.5 w-3.5" />}
+                        {terminateWorkflow.isPending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <OctagonX className="h-3.5 w-3.5 text-red-500" />
+                        )}
                         Terminate
                     </Button>
                     <div className="w-px h-5 bg-border mx-1" />
                     <Button
                         size="sm"
                         variant="outline"
-                        className="gap-1.5"
+                        className="gap-2 h-8 text-xs font-semibold bg-muted/10 border-primary/20 text-foreground hover:bg-primary/10 hover:border-primary/40 transition-all"
                         onClick={() => setLocation(`/workflow/${workflowId}/runs`)}
                     >
-                        <ScrollText className="h-3.5 w-3.5" />
-                        Logs
+                        <HistoryIcon className="h-3.5 w-3.5 text-primary" />
+                        Historial
+                    </Button>
+                    <div className="w-px h-5 bg-border mx-1" />
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setIsEditWorkflowOpen(true)}
+                    >
+                        <SettingsIcon className="h-4 w-4 text-muted-foreground" />
                     </Button>
                     <div className="w-px h-5 bg-border mx-1" />
                     <CreateTableDialog workflowId={workflow.id} workflowType={workflow.type} />
                 </div>
+                <EditWorkflowDialog workflow={workflow} open={isEditWorkflowOpen} onOpenChange={setIsEditWorkflowOpen} />
             </header>
 
             {/* Main Layout */}
@@ -241,11 +287,11 @@ export default function WorkflowDetail() {
                                 key={table.id}
                                 onClick={() => setSelectedTableId(table.id)}
                                 className={`
-                  group flex items-center justify-between px-3 py-2 rounded-md text-sm cursor-pointer transition-colors
-                  ${selectedTableId === table.id
+                   group flex items-center justify-between px-3 py-2 rounded-md text-sm cursor-pointer transition-colors
+                   ${selectedTableId === table.id
                                         ? "bg-primary/10 text-primary font-medium"
                                         : "text-foreground hover:bg-muted"}
-                `}
+                 `}
                             >
                                 <div className="truncate flex-1">{table.name}</div>
                                 <Button
@@ -308,11 +354,6 @@ export default function WorkflowDetail() {
                         <TabsContent value="tables" className="flex-1 m-0 p-0 overflow-hidden relative">
                             {selectedTable ? (
                                 <div className="h-full flex flex-col">
-                                    <div className="bg-muted/30 px-4 py-2 text-xs font-mono border-b border-border/50 text-muted-foreground flex gap-4">
-                                        <span>Type: {selectedTable.function?.type ?? selectedTable.type ?? "sql"}</span>
-                                        <span>Publish: {selectedTable.publish !== false ? "yes" : "no"}</span>
-                                        <span>Memory: {selectedTable.memory ? "yes" : "no"}</span>
-                                    </div>
                                     <div className="flex-1 relative">
                                         <SqlEditor
                                             key={selectedTableId}
@@ -338,7 +379,7 @@ export default function WorkflowDetail() {
                             )}
                         </TabsContent>
 
-                        <TabsContent value="graph" className="flex-1 m-0 p-0 overflow-hidden bg-zinc-900">
+                        <TabsContent value="graph" className="flex-1 m-0 p-0 overflow-hidden bg-zinc-900/10">
                             <DependencyGraph
                                 tables={tables}
                                 onNodeClick={(id: string) => {
@@ -350,6 +391,88 @@ export default function WorkflowDetail() {
                         </TabsContent>
                     </Tabs>
                 </main>
+
+                {/* Right Sidebar / Table Metadata */}
+                <aside className="w-80 border-l border-border bg-card/10 flex flex-col shrink-0 overflow-hidden">
+                    <div className="p-4 border-b border-border/50">
+                        <h2 className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
+                            {activeTab === "graph" ? <LayoutGrid className="h-4 w-4" /> : <TableProperties className="h-4 w-4" />}
+                            {selectedTable ? "Table Properties" : "Select a Table"}
+                        </h2>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                        {selectedTable ? (
+                            <>
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">Table Name</Label>
+                                    <Input
+                                        className="h-8 text-sm bg-muted/20"
+                                        value={selectedTable.name}
+                                        onChange={(e) => handleUpdateTableField("name", e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] uppercase tracking-wider text-muted-foreground font-bold">Processor Type</Label>
+                                    <Select
+                                        value={selectedTable.function?.type ?? selectedTable.type ?? "sql"}
+                                        onValueChange={(val) => handleUpdateTableField("type", val)}
+                                    >
+                                        <SelectTrigger className="h-8 text-sm bg-muted/20">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="sql">SQL Query</SelectItem>
+                                            <SelectItem value="python">Python Function</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-4 pt-2 border-t border-border/40">
+                                    <div className="flex items-center justify-between group">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-medium">Publish Results</Label>
+                                            <p className="text-[11px] text-muted-foreground">Make output available for subscription</p>
+                                        </div>
+                                        <Checkbox
+                                            checked={selectedTable.publish !== false}
+                                            onCheckedChange={(val) => handleUpdateTableField("publish", !!val)}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between group">
+                                        <div className="space-y-0.5">
+                                            <Label className="text-sm font-medium">Memory Storage</Label>
+                                            <p className="text-[11px] text-muted-foreground">Store in-memory for high-speed access</p>
+                                        </div>
+                                        <Checkbox
+                                            checked={!!selectedTable.memory}
+                                            onCheckedChange={(val) => handleUpdateTableField("memory", !!val)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 border-t border-border/40 space-y-3">
+                                    <div className="flex items-center justify-between text-[11px] text-muted-foreground/60 font-mono">
+                                        <span>ID</span>
+                                        <span className="truncate max-w-[120px]">{selectedTable.id}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[11px] text-muted-foreground/60 font-mono">
+                                        <span>Created</span>
+                                        <span>{selectedTable.created_at ? new Date(selectedTable.created_at).toLocaleDateString() : "—"}</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-40 text-center space-y-3">
+                                <TableProperties className="h-8 w-8 text-muted-foreground/20" />
+                                <p className="text-xs text-muted-foreground/60 leading-relaxed px-4">
+                                    Select a node from the graph or a table from the sidebar to edit its properties.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </aside>
 
             </div>
         </div>

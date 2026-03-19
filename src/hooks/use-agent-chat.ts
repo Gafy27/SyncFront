@@ -33,6 +33,10 @@ export function useAgentChat(orgId: string | null, userId = "user") {
   const [pendingTool, setPendingTool] = useState<PendingToolData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  // When a stored session is opened but not yet active, holds the stored session ID.
+  // The workflow only starts when the user sends the first message.
+  const [pendingResumeId, setPendingResumeId] = useState<string | null>(null)
+
   const streamCleanupRef = useRef<(() => void) | null>(null)
   // Tracks how many messages from the CURRENT workflow we've already added to state.
   // The SSE always replays from index 0, so we skip this many at the start.
@@ -206,29 +210,27 @@ export function useAgentChat(orgId: string | null, userId = "user") {
   }, [orgId, userId])
 
   const resumeSession = useCallback(async (storedSessionId: string) => {
-    if (!orgId) return
     stopStreaming()
     setSessionId(null)
     setMessages([])
     setIsStarting(true)
     setError(null)
     setPendingTool(null)
+    setPendingResumeId(null)
     clearSession()
     workflowSeenRef.current = 0
     try {
       const stored = await agentApi.getStoredSession(storedSessionId)
       const history = stored.display_messages ?? []
       setMessages(history)
-      // Historical messages are NOT in the new workflow — workflow seen = 0
-      workflowSeenRef.current = 0
-      const { session_id } = await agentApi.start(orgId, userId, { resumeSessionId: storedSessionId })
-      setSessionId(session_id)
+      // Defer workflow start until user sends a message
+      setPendingResumeId(storedSessionId)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to resume session")
+      setError(e instanceof Error ? e.message : "Failed to load session")
     } finally {
       setIsStarting(false)
     }
-  }, [orgId, userId, stopStreaming])
+  }, [stopStreaming])
 
   const listSessions = useCallback(async (): Promise<StoredSession[]> => {
     if (!orgId) return []
@@ -242,18 +244,30 @@ export function useAgentChat(orgId: string | null, userId = "user") {
 
   const sendMessage = useCallback(
     async (content: string) => {
-      if (!sessionId || isWaiting) return
-      // Add optimistic user message — it will be in the SSE replay, so count it as seen
+      if (isWaiting) return
+      if (!sessionId && !pendingResumeId && !orgId) return
+
       setMessages((prev) => [...prev, { role: "user", content }])
       workflowSeenRef.current++
       const skipCount = workflowSeenRef.current
       setIsWaiting(true)
       setError(null)
+
       try {
-        await agentApi.prompt(sessionId, content)
-        startStreaming(sessionId, skipCount)
+        // Lazily start the workflow on first message
+        let sid = sessionId
+        if (!sid) {
+          const opts = pendingResumeId ? { resumeSessionId: pendingResumeId } : undefined
+          const { session_id } = await agentApi.start(orgId!, userId, opts)
+          sid = session_id
+          setSessionId(sid)
+          setPendingResumeId(null)
+        }
+
+        await agentApi.prompt(sid, content)
+        startStreaming(sid, skipCount)
       } catch (e) {
-        workflowSeenRef.current-- // roll back the increment
+        workflowSeenRef.current--
         if (isSessionGone(e)) {
           clearSession()
           setSessionId(null)
@@ -267,7 +281,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
         }
       }
     },
-    [sessionId, isWaiting, startStreaming]
+    [sessionId, pendingResumeId, orgId, userId, isWaiting, startStreaming]
   )
 
   const confirmTool = useCallback(async () => {
@@ -297,6 +311,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
     }
     clearSession()
     setSessionId(null)
+    setPendingResumeId(null)
     setMessages([])
     setPendingTool(null)
     setIsWaiting(false)
@@ -314,6 +329,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
     pendingTool,
     error,
     hasSession: !!sessionId,
+    isInChat: !!sessionId || !!pendingResumeId,
     startSession,
     resumeSession,
     listSessions,

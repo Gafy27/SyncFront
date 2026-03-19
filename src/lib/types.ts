@@ -65,6 +65,16 @@ export interface Bridge {
   updated_at?: string;
 }
 
+/** Paginated list of bridges returned by the API */
+export interface BridgeList {
+  items: Bridge[];
+  total: number;
+  organization_id: string;
+  page: number;
+  page_size: number;
+  has_next: boolean;
+}
+
 /** Machine: a device/machine scoped directly to an organization */
 export interface Machine {
   id: string;
@@ -216,4 +226,34 @@ export interface OrgStats {
 
 export interface AuthUser extends User {
   organizations: (UserOrganization & { organization_name?: string })[];
+}
+
+// ─── Metadata ──────────────────────────────────────────────
+
+export interface MetadataTable {
+  name: string;
+  description?: string;
+  record_count?: number;
+}
+
+export interface MetadataTableList {
+  items: MetadataTable[];
+  total: number;
+}
+
+export interface MetadataRecord {
+  id: string;
+  table_name: string;
+  data: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MetadataRecordList {
+  items: MetadataRecord[];
+  total: number;
+  table_name: string;
+  page: number;
+  page_size: number;
+  has_next: boolean;
 }

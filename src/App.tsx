@@ -12,50 +12,38 @@ import { Bot } from "lucide-react";
 import { OrganizationProvider } from "@/providers/organization-provider";
 import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
-import Organizations from "@/pages/organizations";
-import OrganizationSettings from "@/pages/organization-settings";
-import OrganizationDetail from "@/pages/organization-detail";
+import OrganizationConfig from "@/pages/organization-config";
 import Connectors from "@/pages/connectors";
 import NewBridge from "@/pages/connectors-new";
 import BridgeDetail from "@/pages/connector-detail";
 import Bridges from "@/pages/bridges";
 import Events from "@/pages/events";
-import Machines from "@/pages/machines";
-import NewMachine from "@/pages/machines-new";
-import MachineDetail from "@/pages/machine-detail";
 import NotFound from "@/pages/not-found";
 import Workflows from "@/pages/workflows";
 import WorkflowDetail from "@/pages/workflow-detail";
 import WorkflowRuns from "@/pages/workflow-runs";
 import WorkflowRunDetail from "@/pages/workflow-run-detail";
 import SqlEditorPage from "@/pages/sql-editor";
+import MetadataPage from "@/pages/metadata";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
-      <Route path="/organizations" component={Organizations} />
-      <Route
-        path="/organizations/:orgId/settings"
-        component={OrganizationSettings}
-      />
-      <Route path="/organizations/:orgId" component={OrganizationDetail} />
+      <Route path="/config" component={OrganizationConfig} />
       {/* Connector Templates Catalog (global) */}
       <Route path="/bridges" component={Bridges} />
       <Route path="/bridges/new/:templateId?" component={NewBridge} />
       <Route path="/bridges/:bridgeId" component={BridgeDetail} />
       {/* Events */}
       <Route path="/events" component={Events} />
-      {/* Machines */}
-      <Route path="/machines" component={Machines} />
-      <Route path="/machines/new" component={NewMachine} />
-      <Route path="/machines/:machineId" component={MachineDetail} />
       {/* Workflows */}
       <Route path="/workflows" component={Workflows} />
       <Route path="/workflow/:id/runs/:runId" component={WorkflowRunDetail} />
       <Route path="/workflow/:id/runs" component={WorkflowRuns} />
       <Route path="/workflow/:id" component={WorkflowDetail} />
       <Route path="/sql-editor" component={SqlEditorPage} />
+      <Route path="/metadata" component={MetadataPage} />
       <Route component={NotFound} />
     </Switch>
   );

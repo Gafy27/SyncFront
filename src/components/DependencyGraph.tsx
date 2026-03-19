@@ -14,6 +14,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
+import { Database, Cpu, Zap, Code2 } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 function hslVarToHex(varName: string): string {
     if (typeof document === 'undefined') return '#94a3b8';
@@ -35,24 +37,73 @@ function hslVarToHex(varName: string): string {
 }
 
 function TableNode({ data, selected }: NodeProps) {
-    const d = data as { label?: string; isSelected?: boolean };
+    const d = data as { label?: string; isSelected?: boolean; type?: string; memory?: boolean; publish?: boolean };
     const active = selected || d.isSelected;
+    // const isFunction = d.type === 'function' || !!d.type; // Simple check for now - removed as per instruction
+
     return (
-        <>
-            <Handle type="target" position={Position.Left} className="!w-2 !h-2 !border-2 !bg-card" />
+        <div className="relative group">
+            <Handle
+                type="target"
+                position={Position.Left}
+                className="!w-2.5 !h-2.5 !border-2 !bg-[#d1d5db] !border-[#d1d5db] !-left-1.25"
+            />
             <div
-                className="px-3 py-2 text-sm rounded-md min-w-[160px] text-center"
+                className="rounded-lg min-w-[200px] border transition-all duration-200 shadow-sm overflow-hidden"
                 style={{
-                    background: active ? 'hsl(var(--primary))' : 'hsl(var(--card))',
-                    color: active ? 'hsl(var(--primary-foreground))' : 'hsl(var(--card-foreground))',
-                    border: active ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))',
-                    fontWeight: active ? 'bold' : 'normal',
+                    background: active ? 'hsl(var(--card))' : 'hsl(var(--card))',
+                    borderColor: active ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                    boxShadow: active ? '0 0 0 1px hsl(var(--primary))' : 'none',
                 }}
             >
-                {d.label ?? ''}
+                {/* Header */}
+                <div className={cn(
+                    "px-3 py-2 flex items-center gap-2 border-b",
+                    active ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-border/50"
+                )}>
+                    {d.memory ? (
+                        <Zap className={cn("w-3.5 h-3.5", active ? "text-primary" : "text-muted-foreground")} />
+                    ) : (
+                        <Database className={cn("w-3.5 h-3.5", active ? "text-primary" : "text-muted-foreground")} />
+                    )}
+                    <span className={cn(
+                        "text-xs font-semibold truncate",
+                        active ? "text-primary" : "text-foreground"
+                    )}>
+                        {d.label ?? 'Untitled'}
+                    </span>
+                </div>
+
+                {/* Body */}
+                <div className="px-3 py-2 flex flex-col gap-1.5 bg-card">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Type</span>
+                        <span className="text-[10px] font-mono bg-muted px-1.5 py-0.5 rounded text-foreground/80">{d.type ?? 'SQL'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Status</span>
+                        <div className="flex items-center gap-1.5">
+                            {d.publish !== false ? (
+                                <>
+                                    <span className="text-[10px] text-foreground/70">Published</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-[10px] text-foreground/50">Draft</span>
+                                    <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <Handle type="source" position={Position.Right} className="!w-2 !h-2 !border-2 !bg-card" />
-        </>
+            <Handle
+                type="source"
+                position={Position.Right}
+                className="!w-2.5 !h-2.5 !border-2 !bg-[#d1d5db] !border-[#d1d5db] !-right-1.25"
+            />
+        </div>
     );
 }
 
@@ -67,10 +118,10 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    const nodeWidth = 200;
-    const nodeHeight = 60;
+    const nodeWidth = 220;
+    const nodeHeight = 85;
 
-    dagreGraph.setGraph({ rankdir: 'LR' }); // Left to Right layout
+    dagreGraph.setGraph({ rankdir: 'LR', nodesep: 50, ranksep: 100 }); // Left to Right layout
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -100,7 +151,10 @@ interface TableForGraph {
     id: string;
     name?: string;
     definition?: string;
-    function?: { definition?: string };
+    type?: string;
+    memory?: boolean;
+    publish?: boolean;
+    function?: { definition?: string; type?: string };
 }
 
 function getSqlDefinition(t: TableForGraph): string {
@@ -168,7 +222,13 @@ export function DependencyGraph({ tables, onNodeClick, selectedTableId }: Depend
             return {
                 id: tid,
                 type: 'tableNode',
-                data: { label: t.name, isSelected: isSelected },
+                data: {
+                    label: t.name,
+                    isSelected: isSelected,
+                    type: t.function?.type ?? t.type ?? 'SQL',
+                    memory: t.memory,
+                    publish: t.publish
+                },
                 position: { x: 0, y: 0 },
                 sourcePosition: Position.Right,
                 targetPosition: Position.Left,
@@ -199,6 +259,44 @@ export function DependencyGraph({ tables, onNodeClick, selectedTableId }: Depend
 
     return (
         <div className="h-full w-full bg-background rounded-lg border border-border overflow-hidden relative">
+            <style>
+                {`
+                .react-flow__controls {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1px;
+                    border: 1px solid hsl(var(--border));
+                    border-radius: 6px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    background: hsl(var(--border) / 0.2);
+                }
+                .react-flow__controls-button {
+                    background: hsl(var(--card)) !important;
+                    border: none !important;
+                    border-bottom: 1px solid hsl(var(--border) / 0.5) !important;
+                    color: hsl(var(--foreground)) !important;
+                    fill: hsl(var(--foreground)) !important;
+                    transition: all 0.2s;
+                    width: 28px !important;
+                    height: 28px !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                .react-flow__controls-button:last-child {
+                    border-bottom: none !important;
+                }
+                .react-flow__controls-button:hover {
+                    background: hsl(var(--accent)) !important;
+                }
+                .react-flow__controls-button svg {
+                    width: 12px !important;
+                    height: 12px !important;
+                    fill: currentColor !important;
+                }
+                `}
+            </style>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -210,7 +308,7 @@ export function DependencyGraph({ tables, onNodeClick, selectedTableId }: Depend
                 className="bg-background"
             >
                 <Background gap={16} size={1} color={gridColor} />
-                <Controls className="fill-foreground bg-card border-border" />
+                <Controls showInteractive={false} className="!bg-transparent !border-none !shadow-none !m-4" />
             </ReactFlow>
         </div>
     );

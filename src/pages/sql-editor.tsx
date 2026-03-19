@@ -1,9 +1,26 @@
 import { useState, useRef } from "react";
-import { Play, Loader2, AlertCircle, Download } from "lucide-react";
+import { Play, Loader2, AlertCircle, Download, Save, Database as DatabaseIcon, Cable } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SqlEditor } from "@/components/SqlEditor";
-import { executeQuery } from "@/lib/api";
+import { executeQuery, metadata as metadataApi, bridges as bridgesApi } from "@/lib/api";
 import { useOrganization } from "@/providers/organization-provider";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Row = Record<string, unknown>;
 
@@ -29,6 +46,7 @@ function downloadCsv(columns: string[], rows: Row[]) {
 
 export default function SqlEditorPage() {
   const { selectedOrg } = useOrganization();
+  const { toast } = useToast();
   const [query, setQuery] = useState("SELECT * FROM ");
   const [rows, setRows] = useState<Row[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
@@ -38,6 +56,57 @@ export default function SqlEditorPage() {
   const [hasRun, setHasRun] = useState(false);
   const startRef = useRef<number>(0);
 
+  // SQL Bridge selection (Org-scoped)
+  const [selectedBridge, setSelectedBridge] = useState<string>("");
+  const { data: orgBridges, isLoading: bridgesLoading } = useQuery({
+    queryKey: ["organizations", selectedOrg, "bridges"],
+    queryFn: () => bridgesApi.list(selectedOrg!),
+    enabled: !!selectedOrg,
+  });
+
+  // Filter only SQL-capable bridges
+  const sqlBridges = (orgBridges?.items ?? []).filter(b =>
+    ["postgresql", "timescaledb", "supabase"].includes(b.type?.toLowerCase() || "")
+  );
+
+  // Set default bridge if none selected
+  if (!selectedBridge && sqlBridges.length > 0) {
+    setSelectedBridge(sqlBridges[0].id);
+  }
+
+  // Metadata Save States
+  const [isDataToMetadataOpen, setIsDataToMetadataOpen] = useState(false);
+  const [selectedMetaTable, setSelectedMetaTable] = useState<string>("");
+  const [isSavingMeta, setIsSavingMeta] = useState(false);
+
+  const { data: metaTables } = useQuery({
+    queryKey: ["metadata", selectedOrg, "tables"],
+    queryFn: () => metadataApi.listTables(selectedOrg!),
+    enabled: !!selectedOrg && isDataToMetadataOpen,
+  });
+
+  const handleSaveToMetadata = async () => {
+    if (!selectedMetaTable || rows.length === 0 || !selectedOrg) return;
+    setIsSavingMeta(true);
+    try {
+      const records = rows.map(r => ({ data: r }));
+      await metadataApi.bulkCreateRecords(selectedOrg, selectedMetaTable, records);
+      toast({
+        title: "Éxito",
+        description: `${rows.length} registros guardados en la tabla ${selectedMetaTable}`,
+      });
+      setIsDataToMetadataOpen(false);
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Fallo al guardar metadatos",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingMeta(false);
+    }
+  };
+
   const handleRun = async () => {
     if (!query.trim() || !selectedOrg) return;
     setIsLoading(true);
@@ -46,7 +115,11 @@ export default function SqlEditorPage() {
     startRef.current = performance.now();
 
     try {
-      const result = await executeQuery(query, selectedOrg);
+      const result = await executeQuery(
+        query,
+        selectedOrg,
+        selectedBridge || undefined
+      );
       const elapsed = performance.now() - startRef.current;
       setRuntime(elapsed);
       if (result.length > 0) {
@@ -77,7 +150,37 @@ export default function SqlEditorPage() {
   return (
     <div className="flex flex-col h-full bg-background" onKeyDown={handleKeyDown}>
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card/50 shrink-0">
+      <div className="flex items-center gap-3 px-4 py-2 border-b border-border bg-card/50 shrink-0 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 mr-2 border-r pr-4 border-border/50 shrink-0">
+          <DatabaseIcon className="h-4 w-4 text-muted-foreground mr-1" />
+          <Select onValueChange={setSelectedBridge} value={selectedBridge}>
+            <SelectTrigger className="w-[200px] h-8 text-xs font-semibold bg-background">
+              <SelectValue placeholder="Seleccionar origen..." />
+            </SelectTrigger>
+            <SelectContent>
+              {bridgesLoading ? (
+                <div className="p-2 text-xs text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Cargando puentes...
+                </div>
+              ) : sqlBridges.length === 0 ? (
+                <div className="p-2 text-xs text-muted-foreground">
+                  No se hallaron fuentes SQL
+                </div>
+              ) : (
+                sqlBridges.map((b) => (
+                  <SelectItem key={b.id} value={b.id} className="text-xs">
+                    <div className="flex items-center gap-2">
+                      <Cable className="h-3 w-3 text-muted-foreground/60" />
+                      <span>{b.name}</span>
+                    </div>
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
         <Button
           size="sm"
           onClick={handleRun}
@@ -114,15 +217,26 @@ export default function SqlEditorPage() {
             </button>
           </div>
           {rows.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1 h-7 text-xs"
-              onClick={() => downloadCsv(columns, rows)}
-            >
-              <Download className="h-3 w-3" />
-              CSV
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 h-7 text-xs text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => setIsDataToMetadataOpen(true)}
+              >
+                <Save className="h-3 w-3" />
+                Guardar en Metadatos
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1 h-7 text-xs"
+                onClick={() => downloadCsv(columns, rows)}
+              >
+                <Download className="h-3 w-3" />
+                CSV
+              </Button>
+            </div>
           )}
         </div>
 
@@ -206,6 +320,43 @@ export default function SqlEditorPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={isDataToMetadataOpen} onOpenChange={setIsDataToMetadataOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Guardar en Metadatos</DialogTitle>
+            <DialogDescription>
+              Seleccione la tabla de destino para guardar los {rows.length} resultados de la consulta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Select onValueChange={setSelectedMetaTable} value={selectedMetaTable}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar tabla de metadatos" />
+              </SelectTrigger>
+              <SelectContent>
+                {metaTables?.items.map((table) => (
+                  <SelectItem key={table.name} value={table.name}>
+                    {table.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDataToMetadataOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveToMetadata}
+              disabled={!selectedMetaTable || isSavingMeta}
+            >
+              {isSavingMeta && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Importar {rows.length} registros
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

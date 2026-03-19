@@ -39,8 +39,8 @@ function StatusBadge({ status }: { status: string }) {
     status === "completed"
       ? "text-green-600 border-green-400/50 bg-green-50 dark:bg-green-950/30"
       : status === "running"
-      ? "text-blue-600 border-blue-400/50 bg-blue-50 dark:bg-blue-950/30"
-      : "text-red-600 border-red-400/50 bg-red-50 dark:bg-red-950/30";
+        ? "text-blue-600 border-blue-400/50 bg-blue-50 dark:bg-blue-950/30"
+        : "text-red-600 border-red-400/50 bg-red-50 dark:bg-red-950/30";
   return (
     <Badge variant="outline" className={`capitalize text-xs ${cls}`}>
       {status}
@@ -89,8 +89,8 @@ function GanttChart({ activities }: { activities: ActivityLog[] }) {
             activity.status === "completed"
               ? "bg-green-500"
               : activity.status === "failed"
-              ? "bg-red-500"
-              : "bg-blue-500 animate-pulse";
+                ? "bg-red-500"
+                : "bg-blue-500 animate-pulse";
           const dur = activity.duration_ms > 0 ? formatDuration(activity.duration_ms) : "…";
 
           return (
@@ -151,7 +151,7 @@ function JsonViewer({ data }: { data: unknown }) {
           Copiado
         </span>
       )}
-      <pre className="text-xs font-mono bg-muted text-foreground rounded-md p-4 overflow-auto max-h-64 leading-5">
+      <pre className="text-xs font-mono bg-background border border-border/40 text-foreground rounded-md p-4 overflow-auto max-h-64 leading-5 shadow-inner no-scrollbar">
         {text}
       </pre>
     </div>
@@ -199,8 +199,8 @@ function ActivityRow({ activity }: { activity: ActivityLog }) {
                 activity.activity_log.status === "ACCEPTED"
                   ? "text-green-600 border-green-400/50 bg-green-50 dark:bg-green-950/30 text-xs"
                   : activity.activity_log.status === "REJECTED"
-                  ? "text-orange-600 border-orange-400/50 bg-orange-50 text-xs"
-                  : "text-red-600 border-red-400/50 bg-red-50 text-xs"
+                    ? "text-orange-600 border-orange-400/50 bg-orange-50 text-xs"
+                    : "text-red-600 border-red-400/50 bg-red-50 text-xs"
               }
             >
               {activity.activity_log.status as string}
@@ -209,8 +209,8 @@ function ActivityRow({ activity }: { activity: ActivityLog }) {
         </td>
       </tr>
       {expanded && hasLog && (
-        <tr className="border-b border-border/50 bg-muted/10">
-          <td colSpan={6} className="p-4">
+        <tr className="border-b border-border/50 bg-muted/10 no-scrollbar">
+          <td colSpan={6} className="p-4 no-scrollbar">
             <JsonViewer data={activity.activity_log} />
           </td>
         </tr>
@@ -245,11 +245,11 @@ export default function WorkflowRunDetailPage() {
   const activities = groupActivities(allActivities);
 
   // For the run summary, derive from activities list (all share same run metadata)
-  const runStatus = allActivities.find((a) => a.status === "failed")
+  const runStatus = activities.find((a) => a.status === "failed")
     ? "failed"
-    : allActivities.every((a) => a.status === "completed")
-    ? "completed"
-    : "running";
+    : (activities.length > 0 && activities.every((a) => a.status === "completed"))
+      ? "completed"
+      : "running";
 
   const minStarted = activities.reduce(
     (min, a) => (a.started_at > 0 && a.started_at < min ? a.started_at : min),

@@ -1,6 +1,7 @@
 import type {
   Organization,
   Bridge,
+  BridgeList,
   Machine,
   OrgEvent,
   Workflow,
@@ -12,6 +13,10 @@ import type {
   AuthUser,
   RunsListResponse,
   ActivitiesListResponse,
+  MetadataTable,
+  MetadataTableList,
+  MetadataRecord,
+  MetadataRecordList,
 } from "./types";
 
 export const API_BASE_URL =
@@ -60,8 +65,8 @@ async function request<T>(
           ? json.detail
           : Array.isArray(json.detail)
             ? json.detail.map((e: { msg?: string; loc?: string[] }) =>
-                [e.loc?.slice(1).join("."), e.msg].filter(Boolean).join(": ")
-              ).join(" | ")
+              [e.loc?.slice(1).join("."), e.msg].filter(Boolean).join(": ")
+            ).join(" | ")
             : JSON.stringify(json.detail);
         throw new Error(detail);
       }
@@ -91,15 +96,23 @@ function del<T = void>(path: string) {
   return request<T>(path, { method: "DELETE" });
 }
 
+function patch<T>(path: string, body: unknown) {
+  return request<T>(path, { method: "PATCH", body: JSON.stringify(body) });
+}
+
 // ─── SQL Execute ────────────────────────────────────────────
+export async function getSqlBridges(): Promise<{ key: string; type: string; instance: string; is_default: boolean }[]> {
+  return get<any[]>("/api/sql/bridges");
+}
 
 export async function executeQuery(
   query: string,
-  orgId: string
+  orgId: string,
+  bridgeId?: string
 ): Promise<Record<string, unknown>[]> {
   const res = await post<{ rows: Record<string, unknown>[] } | Record<string, unknown>[]>(
     "/api/sql/execute",
-    { query, org_id: orgId }
+    { query, org_id: orgId, bridge_id: bridgeId }
   );
   return Array.isArray(res) ? res : res.rows;
 }
@@ -173,7 +186,7 @@ export const orgUsers = {
 
 export const bridges = {
   list: (orgId: string) =>
-    get<Bridge[]>(`/api/organizations/${orgId}/bridges`),
+    get<BridgeList>(`/api/organizations/${orgId}/bridges`),
   get: (orgId: string, bridgeId: string) =>
     get<Bridge>(`/api/organizations/${orgId}/bridges/${bridgeId}`),
   create: (orgId: string, data: Partial<Bridge>) =>
@@ -283,4 +296,32 @@ export const workflowTables = {
     del(
       `/api/organizations/${orgId}/workflows/${workflowId}/tables/${tableId}`
     ),
+};
+
+// ─── Metadata (Org-Scoped) ───────────────────────────────────
+
+export const metadata = {
+  listTables: (orgId: string) =>
+    get<MetadataTableList>(`/api/organizations/${orgId}/metadata`),
+  createTable: (orgId: string, data: { name: string; description?: string }) =>
+    post<MetadataTable>(`/api/organizations/${orgId}/metadata`, data),
+  deleteTable: (orgId: string, tableName: string) =>
+    del(`/api/organizations/${orgId}/metadata/${tableName}`),
+
+  listRecords: (orgId: string, tableName: string, page = 1, pageSize = 50) =>
+    get<MetadataRecordList>(
+      `/api/organizations/${orgId}/metadata/${tableName}/records?page=${page}&page_size=${pageSize}`
+    ),
+  getRecord: (orgId: string, tableName: string, recordId: string) =>
+    get<MetadataRecord>(`/api/organizations/${orgId}/metadata/${tableName}/records/${recordId}`),
+  createRecord: (orgId: string, tableName: string, data: Record<string, any>) =>
+    post<MetadataRecord>(`/api/organizations/${orgId}/metadata/${tableName}/records`, { data }),
+  replaceRecord: (orgId: string, tableName: string, recordId: string, data: Record<string, any>) =>
+    put<MetadataRecord>(`/api/organizations/${orgId}/metadata/${tableName}/records/${recordId}`, { data }),
+  updateRecord: (orgId: string, tableName: string, recordId: string, data: Record<string, any>) =>
+    patch<MetadataRecord>(`/api/organizations/${orgId}/metadata/${tableName}/records/${recordId}`, { data }),
+  deleteRecord: (orgId: string, tableName: string, recordId: string) =>
+    del(`/api/organizations/${orgId}/metadata/${tableName}/records/${recordId}`),
+  bulkCreateRecords: (orgId: string, tableName: string, records: { data: Record<string, any> }[]) =>
+    post<{ count: number; table_name: string }>(`/api/organizations/${orgId}/metadata/${tableName}/records/bulk`, records),
 };
