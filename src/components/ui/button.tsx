@@ -21,13 +21,11 @@ const buttonVariants = cva(
         ghost:
           "border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground transition-colors",
       },
-      // Heights are set as "min" heights, because sometimes Ai will place large amount of content
-      // inside buttons. With a min-height they will look appropriate with small amounts of content,
-      // but will expand to fit large amounts of content.
+      // Use fixed heights so button sizes stay visually consistent across the UI.
       size: {
-        default: "min-h-9 px-4 py-2",
-        sm: "min-h-8 rounded-md px-3 text-xs",
-        lg: "min-h-10 rounded-md px-8",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
       },
     },
