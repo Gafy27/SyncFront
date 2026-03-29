@@ -1,1 +1,0 @@
-# SyncCore Configuration API

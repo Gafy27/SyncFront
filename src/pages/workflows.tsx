@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/providers/organization-provider";
 import { workflows as workflowsApi } from "@/lib/api";
@@ -23,20 +24,25 @@ export default function WorkflowsPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: workflows = [], isLoading } = useQuery<Workflow[]>({
+  const { data: workflowsRaw, isLoading } = useQuery({
     queryKey: ["organizations", selectedOrg, "workflows"],
-    queryFn: async () => {
-      const res = await workflowsApi.list(selectedOrg!);
-      if (Array.isArray(res)) return res;
-      if (res && typeof res === "object") {
-        const o = res as Record<string, unknown>;
-        const key = Object.keys(o).find((k) => Array.isArray(o[k]));
-        if (key) return o[key] as Workflow[];
-      }
-      return [];
-    },
+    queryFn: () => workflowsApi.list(selectedOrg!),
     enabled: !!selectedOrg,
   });
+
+  const workflows = useMemo(() => {
+    if (!workflowsRaw) return [];
+    if (Array.isArray(workflowsRaw)) return workflowsRaw;
+    if (typeof workflowsRaw === "object") {
+      const obj = workflowsRaw as any;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.workflows)) return obj.workflows;
+      // Fallback: find any key that contains an array
+      const key = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+      if (key) return obj[key];
+    }
+    return [];
+  }, [workflowsRaw]);
 
   const deleteWorkflow = useMutation({
     mutationFn: (workflowId: string) => workflowsApi.delete(selectedOrg!, workflowId),
@@ -93,7 +99,7 @@ export default function WorkflowsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              workflows.map((wf) => (
+              workflows.map((wf: Workflow) => (
                 <TableRow
                   key={wf.id}
                   className="group border-none hover:bg-muted/30 transition-colors cursor-pointer"

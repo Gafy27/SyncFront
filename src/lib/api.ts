@@ -13,10 +13,14 @@ import type {
   AuthUser,
   RunsListResponse,
   ActivitiesListResponse,
+  MetadataColumn,
   MetadataTable,
   MetadataTableList,
   MetadataRecord,
   MetadataRecordList,
+  Space,
+  SpaceList,
+  SQLExample,
 } from "./types";
 
 export const API_BASE_URL =
@@ -108,11 +112,11 @@ export async function getSqlBridges(): Promise<{ key: string; type: string; inst
 export async function executeQuery(
   query: string,
   orgId: string,
-  bridgeId?: string
+  bridge?: string
 ): Promise<Record<string, unknown>[]> {
   const res = await post<{ rows: Record<string, unknown>[] } | Record<string, unknown>[]>(
     "/api/sql/execute",
-    { query, org_id: orgId, bridge_id: bridgeId }
+    { query, org_id: orgId, bridge }
   );
   return Array.isArray(res) ? res : res.rows;
 }
@@ -303,7 +307,7 @@ export const workflowTables = {
 export const metadata = {
   listTables: (orgId: string) =>
     get<MetadataTableList>(`/api/organizations/${orgId}/metadata`),
-  createTable: (orgId: string, data: { name: string; description?: string }) =>
+  createTable: (orgId: string, data: { name: string; description?: string; columns: Pick<MetadataColumn, "name" | "type" | "nullable">[] }) =>
     post<MetadataTable>(`/api/organizations/${orgId}/metadata`, data),
   deleteTable: (orgId: string, tableName: string) =>
     del(`/api/organizations/${orgId}/metadata/${tableName}`),
@@ -324,4 +328,17 @@ export const metadata = {
     del(`/api/organizations/${orgId}/metadata/${tableName}/records/${recordId}`),
   bulkCreateRecords: (orgId: string, tableName: string, records: { data: Record<string, any> }[]) =>
     post<{ count: number; table_name: string }>(`/api/organizations/${orgId}/metadata/${tableName}/records/bulk`, records),
+};
+
+export const spaces = {
+  list: (orgId: string) =>
+    get<SpaceList>(`/api/organizations/${orgId}/spaces`),
+  get: (orgId: string, spaceId: string) =>
+    get<Space>(`/api/organizations/${orgId}/spaces/${spaceId}`),
+  create: (orgId: string, data: { name: string; description?: string; instructions?: string; sql_examples?: SQLExample[] }) =>
+    post<Space>(`/api/organizations/${orgId}/spaces`, data),
+  update: (orgId: string, spaceId: string, data: { name?: string; description?: string; instructions?: string; sql_examples?: SQLExample[] }) =>
+    put<Space>(`/api/organizations/${orgId}/spaces/${spaceId}`, data),
+  delete: (orgId: string, spaceId: string) =>
+    del(`/api/organizations/${orgId}/spaces/${spaceId}`),
 };

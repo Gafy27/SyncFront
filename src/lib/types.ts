@@ -109,6 +109,7 @@ export interface OrgEvent {
 export interface WindowConfig {
   type: string;        // "tumbling" | "sliding" | "stepping"
   size?: string;       // e.g. "30m", "1h"
+  step?: string;       // e.g. "10m" (for sliding windows)
   triggers?: string[];
 }
 
@@ -124,6 +125,8 @@ export interface Workflow {
   triggers?: string[];
   /** Batch only: window schedule config */
   window?: WindowConfig;
+  task_queue?: string;   // Batch only
+  timeout?: number;      // Batch only
   description?: string | null;
   is_enabled?: boolean;
   tables?: WorkflowTable[];
@@ -230,10 +233,21 @@ export interface AuthUser extends User {
 
 // ─── Metadata ──────────────────────────────────────────────
 
+export type MetadataColumnType = "TEXT" | "INTEGER" | "FLOAT" | "BOOLEAN" | "TIMESTAMP";
+
+export interface MetadataColumn {
+  name: string;
+  type: MetadataColumnType;
+  nullable: boolean;
+}
+
 export interface MetadataTable {
   name: string;
   description?: string;
+  columns: MetadataColumn[];
   record_count?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MetadataTableList {
@@ -243,7 +257,6 @@ export interface MetadataTableList {
 
 export interface MetadataRecord {
   id: string;
-  table_name: string;
   data: Record<string, any>;
   created_at?: string;
   updated_at?: string;
@@ -253,6 +266,31 @@ export interface MetadataRecordList {
   items: MetadataRecord[];
   total: number;
   table_name: string;
+  page: number;
+  page_size: number;
+  has_next: boolean;
+}
+
+// ─── Agent Spaces ──────────────────────────────────────────
+
+export interface SQLExample {
+  description: string;
+  sql: string;
+}
+
+export interface Space {
+  id: string;
+  name: string;
+  description?: string | null;
+  instructions: string;
+  sql_examples: SQLExample[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SpaceList {
+  items: Space[];
+  total: number;
   page: number;
   page_size: number;
   has_next: boolean;

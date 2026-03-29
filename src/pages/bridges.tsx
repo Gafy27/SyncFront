@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/providers/organization-provider";
 import { bridges as bridgesApi, connectorTemplates as templatesApi } from "@/lib/api";
@@ -21,20 +22,25 @@ export default function BridgesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: bridgeList = [], isLoading, isError } = useQuery<Bridge[]>({
+  const { data: bridgesRaw, isLoading, isError } = useQuery({
     queryKey: ["organizations", selectedOrg, "bridges"],
-    queryFn: async () => {
-      const res = await bridgesApi.list(selectedOrg!);
-      if (Array.isArray(res)) return res;
-      if (res && typeof res === "object") {
-        const o = res as Record<string, unknown>;
-        const key = Object.keys(o).find((k) => Array.isArray(o[k]));
-        if (key) return o[key] as Bridge[];
-      }
-      return [];
-    },
+    queryFn: () => bridgesApi.list(selectedOrg!),
     enabled: !!selectedOrg,
   });
+
+  const bridgeList = useMemo(() => {
+    if (!bridgesRaw) return [];
+    if (Array.isArray(bridgesRaw)) return bridgesRaw;
+    if (typeof bridgesRaw === "object") {
+      const obj = bridgesRaw as any;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.bridges)) return obj.bridges;
+      // Fallback
+      const key = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+      if (key) return obj[key];
+    }
+    return [];
+  }, [bridgesRaw]);
 
   const { data: templates = [] } = useQuery<ConnectorTemplate[]>({
     queryKey: ["connector-templates"],

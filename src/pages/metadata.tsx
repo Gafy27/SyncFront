@@ -7,22 +7,19 @@ import {
     MoreVertical,
     Table as TableIcon,
     LayoutGrid,
-    List,
     Edit2,
-    Save,
+    PlusCircle,
     X,
-    PlusCircle
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useOrganization } from "@/providers/organization-provider";
 import { metadata as metadataApi } from "@/lib/api";
-import { MetadataTable, MetadataRecord } from "@/lib/types";
+import { MetadataTable, MetadataRecord, MetadataColumn, MetadataColumnType } from "@/lib/types";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -47,150 +44,266 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
-// --- Sub-components ---
+const COLUMN_TYPES: MetadataColumnType[] = ["TEXT", "INTEGER", "FLOAT", "BOOLEAN", "TIMESTAMP"];
 
-interface PropertyRow {
-    key: string;
-    value: any;
+function formatCellValue(val: unknown, type: MetadataColumnType): string {
+    if (val === null || val === undefined) return "—";
+    if (type === "BOOLEAN") return val ? "true" : "false";
+    if (type === "TIMESTAMP" && typeof val === "string") {
+        try { return new Date(val).toLocaleString(); } catch { return String(val); }
+    }
+    return String(val);
 }
+
+// ─── Record Editor Dialog ────────────────────────────────────────────────────
 
 function RecordEditorDialog({
     open,
     onOpenChange,
-    tableName,
+    table,
     record,
-    onSave
+    onSave,
+    isPending,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    tableName: string;
+    table: MetadataTable;
     record?: MetadataRecord;
     onSave: (data: Record<string, any>) => void;
+    isPending: boolean;
 }) {
-    const [properties, setProperties] = useState<PropertyRow[]>(() => {
-        if (record?.data) {
-            return Object.entries(record.data).map(([key, value]) => ({ key, value }));
+    const initialValues = () => {
+        const defaults: Record<string, string> = {};
+        for (const col of table.columns) {
+            defaults[col.name] = record ? String(record.data[col.name] ?? "") : "";
         }
-        return [{ key: "", value: "" }];
-    });
-
-    const addProperty = () => {
-        setProperties([...properties, { key: "", value: "" }]);
+        return defaults;
     };
-
-    const removeProperty = (index: number) => {
-        setProperties(properties.filter((_, i) => i !== index));
-    };
-
-    const updateProperty = (index: number, field: "key" | "value", val: any) => {
-        const next = [...properties];
-        next[index][field] = val;
-        setProperties(next);
-    };
+    const [values, setValues] = useState<Record<string, string>>(initialValues);
 
     const handleSave = () => {
         const data: Record<string, any> = {};
-        properties.forEach(p => {
-            if (p.key.trim()) {
-                data[p.key.trim()] = p.value;
+        for (const col of table.columns) {
+            const raw = values[col.name];
+            if (raw === "" || raw === undefined) {
+                data[col.name] = null;
+            } else if (col.type === "INTEGER") {
+                data[col.name] = parseInt(raw, 10);
+            } else if (col.type === "FLOAT") {
+                data[col.name] = parseFloat(raw);
+            } else if (col.type === "BOOLEAN") {
+                data[col.name] = raw === "true";
+            } else {
+                data[col.name] = raw;
             }
-        });
+        }
         onSave(data);
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+            <DialogContent className="max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{record ? "Editar Registro" : "Nuevo Registro"}</DialogTitle>
                     <DialogDescription>
-                        Agregue o modifique las propiedades de este registro en {tableName}
+                        Rellene los campos de la tabla <span className="font-mono font-semibold">{table.name}</span>
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-auto py-4">
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-2">
-                            <div className="col-span-5">Clave (ej: location)</div>
-                            <div className="col-span-6">Valor (ej: Hall A)</div>
-                            <div className="col-span-1"></div>
-                        </div>
-
-                        {properties.map((prop, idx) => (
-                            <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                                <div className="col-span-5">
-                                    <Input
-                                        placeholder="Clave"
-                                        value={prop.key}
-                                        onChange={(e) => updateProperty(idx, "key", e.target.value)}
-                                        className="h-9 text-sm font-mono"
-                                    />
-                                </div>
-                                <div className="col-span-6">
-                                    <Input
-                                        placeholder="Valor"
-                                        value={prop.value}
-                                        onChange={(e) => updateProperty(idx, "value", e.target.value)}
-                                        className="h-9 text-sm"
-                                    />
-                                </div>
-                                <div className="col-span-1 flex justify-end">
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                        onClick={() => removeProperty(idx)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto pr-1">
+                    {table.columns.map((col) => (
+                        <div key={col.name} className="grid grid-cols-3 items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                                <Label className="text-xs font-mono truncate">{col.name}</Label>
+                                <Badge variant="outline" className="text-[9px] px-1 h-4 font-mono shrink-0">{col.type}</Badge>
                             </div>
-                        ))}
-
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full border-dashed"
-                            onClick={addProperty}
-                        >
-                            <PlusCircle className="h-4 w-4 mr-2" />
-                            Añadir Propiedad
-                        </Button>
-                    </div>
+                            {col.type === "BOOLEAN" ? (
+                                <Select
+                                    value={values[col.name] ?? ""}
+                                    onValueChange={(v) => setValues({ ...values, [col.name]: v })}
+                                >
+                                    <SelectTrigger className="col-span-2 h-8 text-xs">
+                                        <SelectValue placeholder="Seleccionar..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="true">true</SelectItem>
+                                        <SelectItem value="false">false</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <Input
+                                    className="col-span-2 h-8 text-xs font-mono"
+                                    placeholder={col.nullable ? "null" : `${col.type.toLowerCase()}...`}
+                                    type={col.type === "INTEGER" || col.type === "FLOAT" ? "number" : "text"}
+                                    value={values[col.name] ?? ""}
+                                    onChange={(e) => setValues({ ...values, [col.name]: e.target.value })}
+                                />
+                            )}
+                        </div>
+                    ))}
                 </div>
 
                 <DialogFooter className="pt-4 border-t">
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                    <Button onClick={handleSave}>Guardar Registro</Button>
+                    <Button onClick={handleSave} disabled={isPending}>Guardar Registro</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
 
-// --- Main Components ---
+// ─── Create Table Dialog ─────────────────────────────────────────────────────
+
+function CreateTableDialog({
+    open,
+    onOpenChange,
+    onSave,
+    isPending,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSave: (data: { name: string; description?: string; columns: MetadataColumn[] }) => void;
+    isPending: boolean;
+}) {
+    const [name, setName] = useState("");
+    const [description, setDescription] = useState("");
+    const [columns, setColumns] = useState<MetadataColumn[]>([
+        { name: "", type: "TEXT", nullable: true },
+    ]);
+
+    const addColumn = () => setColumns([...columns, { name: "", type: "TEXT", nullable: true }]);
+    const removeColumn = (i: number) => setColumns(columns.filter((_, idx) => idx !== i));
+    const updateColumn = (i: number, patch: Partial<MetadataColumn>) => {
+        const next = [...columns];
+        next[i] = { ...next[i], ...patch };
+        setColumns(next);
+    };
+
+    const handleSave = () => {
+        onSave({ name, description: description || undefined, columns });
+    };
+
+    const valid = name.trim() && columns.length > 0 && columns.every(c => c.name.trim());
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Crear Tabla de Metadatos</DialogTitle>
+                    <DialogDescription>
+                        Defina el nombre y el esquema de columnas de la tabla.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tname" className="text-xs">Nombre <span className="text-destructive">*</span></Label>
+                            <Input id="tname" placeholder="ej: machine_props" className="font-mono text-sm h-8"
+                                value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tdesc" className="text-xs">Descripción</Label>
+                            <Input id="tdesc" placeholder="Opcional" className="text-sm h-8"
+                                value={description} onChange={(e) => setDescription(e.target.value)} />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label className="text-xs">Columnas</Label>
+                            <Button variant="ghost" size="sm" className="h-6 text-xs gap-1" onClick={addColumn}>
+                                <PlusCircle className="h-3 w-3" /> Añadir columna
+                            </Button>
+                        </div>
+
+                        <div className="border rounded-md overflow-hidden">
+                            <div className="grid grid-cols-12 gap-0 bg-muted/40 px-3 py-1.5 text-[10px] uppercase tracking-wide font-semibold text-muted-foreground border-b">
+                                <div className="col-span-5">Nombre</div>
+                                <div className="col-span-4">Tipo</div>
+                                <div className="col-span-2">Nullable</div>
+                                <div className="col-span-1"></div>
+                            </div>
+                            <div className="max-h-48 overflow-y-auto divide-y">
+                                {columns.map((col, i) => (
+                                    <div key={i} className="grid grid-cols-12 gap-2 px-3 py-2 items-center">
+                                        <div className="col-span-5">
+                                            <Input
+                                                placeholder="col_name"
+                                                className="h-7 text-xs font-mono"
+                                                value={col.name}
+                                                onChange={(e) => updateColumn(i, { name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="col-span-4">
+                                            <Select value={col.type} onValueChange={(v) => updateColumn(i, { type: v as MetadataColumnType })}>
+                                                <SelectTrigger className="h-7 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {COLUMN_TYPES.map(t => (
+                                                        <SelectItem key={t} value={t} className="text-xs font-mono">{t}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="col-span-2 flex justify-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={col.nullable}
+                                                onChange={(e) => updateColumn(i, { nullable: e.target.checked })}
+                                                className="h-4 w-4 accent-primary"
+                                            />
+                                        </div>
+                                        <div className="col-span-1 flex justify-end">
+                                            <Button
+                                                variant="ghost" size="icon"
+                                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                                onClick={() => removeColumn(i)}
+                                                disabled={columns.length === 1}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter className="pt-4 border-t">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+                    <Button onClick={handleSave} disabled={!valid || isPending}>Crear Tabla</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function MetadataPage() {
     const { selectedOrg } = useOrganization();
     const { toast } = useToast();
     const [selectedTable, setSelectedTable] = useState<MetadataTable | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-
-    // Dialog states
     const [isCreateTableOpen, setIsCreateTableOpen] = useState(false);
     const [isRecordEditorOpen, setIsRecordEditorOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState<MetadataRecord | undefined>(undefined);
-
-    // New table form state
-    const [newTableName, setNewTableName] = useState("");
-    const [newTableDesc, setNewTableDesc] = useState("");
+    const [deletingTableName, setDeletingTableName] = useState<string | null>(null);
 
     const orgId = selectedOrg || "";
 
-    // Queries
     const { data: tableData, isLoading: tablesLoading } = useQuery({
         queryKey: ["metadata", orgId, "tables"],
         queryFn: () => metadataApi.listTables(orgId),
@@ -203,15 +316,13 @@ export default function MetadataPage() {
         enabled: !!orgId && !!selectedTable,
     });
 
-    // Mutations
     const createTableMutation = useMutation({
-        mutationFn: (data: { name: string; description?: string }) =>
+        mutationFn: (data: { name: string; description?: string; columns: MetadataColumn[] }) =>
             metadataApi.createTable(orgId, data),
-        onSuccess: () => {
+        onSuccess: (created) => {
             queryClient.invalidateQueries({ queryKey: ["metadata", orgId, "tables"] });
             setIsCreateTableOpen(false);
-            setNewTableName("");
-            setNewTableDesc("");
+            setSelectedTable(created);
             toast({ title: "Éxito", description: "Tabla creada correctamente" });
         },
         onError: (err: Error) => {
@@ -223,22 +334,18 @@ export default function MetadataPage() {
         mutationFn: (tableName: string) => metadataApi.deleteTable(orgId, tableName),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["metadata", orgId, "tables"] });
-            if (selectedTable?.name === deletingTableName) {
-                setSelectedTable(null);
-            }
+            if (selectedTable?.name === deletingTableName) setSelectedTable(null);
+            setDeletingTableName(null);
             toast({ title: "Éxito", description: "Tabla eliminada" });
         }
     });
-
-    const [deletingTableName, setDeletingTableName] = useState<string | null>(null);
 
     const saveRecordMutation = useMutation({
         mutationFn: (data: Record<string, any>) => {
             if (editingRecord) {
                 return metadataApi.replaceRecord(orgId, selectedTable!.name, editingRecord.id, data);
-            } else {
-                return metadataApi.createRecord(orgId, selectedTable!.name, data);
             }
+            return metadataApi.createRecord(orgId, selectedTable!.name, data);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["metadata", orgId, "records", selectedTable?.name] });
@@ -264,6 +371,11 @@ export default function MetadataPage() {
         t.name.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
+    // Sync selectedTable with fresh data from tableData (columns may update)
+    const freshSelectedTable = selectedTable
+        ? (tableData?.items.find(t => t.name === selectedTable.name) ?? selectedTable)
+        : null;
+
     if (!orgId) {
         return (
             <div className="h-full flex items-center justify-center">
@@ -271,6 +383,8 @@ export default function MetadataPage() {
             </div>
         );
     }
+
+    const columns = freshSelectedTable?.columns ?? [];
 
     return (
         <div className="flex h-full bg-background overflow-hidden">
@@ -321,20 +435,21 @@ export default function MetadataPage() {
                                 <button
                                     key={table.name}
                                     onClick={() => setSelectedTable(table)}
-                                    className={`w-full group flex flex-col p-3 rounded-md text-left transition-all border border-transparent ${selectedTable?.name === table.name
+                                    className={`w-full group flex flex-col p-3 rounded-md text-left transition-all border border-transparent ${
+                                        freshSelectedTable?.name === table.name
                                             ? "bg-muted/60 border-border/40 shadow-sm"
                                             : "hover:bg-muted/30 text-muted-foreground"
-                                        }`}
+                                    }`}
                                 >
                                     <div className="flex items-center justify-between mb-1">
                                         <div className="flex items-center gap-2 overflow-hidden">
-                                            <TableIcon className={`h-3.5 w-3.5 shrink-0 ${selectedTable?.name === table.name ? "text-primary" : "text-muted-foreground/60"}`} />
-                                            <span className={`text-[13.5px] truncate font-semibold ${selectedTable?.name === table.name ? "text-foreground" : ""}`}>
+                                            <TableIcon className={`h-3.5 w-3.5 shrink-0 ${freshSelectedTable?.name === table.name ? "text-primary" : "text-muted-foreground/60"}`} />
+                                            <span className={`text-[13.5px] truncate font-semibold ${freshSelectedTable?.name === table.name ? "text-foreground" : ""}`}>
                                                 {table.name}
                                             </span>
                                         </div>
                                         <Badge variant="outline" className="h-4 px-1 text-[9px] font-mono bg-background/50">
-                                            {table.record_count || 0}
+                                            {table.columns.length} cols
                                         </Badge>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground/60 line-clamp-1 pl-5">
@@ -349,28 +464,24 @@ export default function MetadataPage() {
 
             {/* Right Column: Table Records */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {selectedTable ? (
+                {freshSelectedTable ? (
                     <>
-                        {/* Detail Header */}
+                        {/* Header */}
                         <div className="px-8 py-3 bg-muted/10 border-b border-border/40 flex items-center justify-between shrink-0 h-[53px]">
                             <div className="flex items-center gap-3 overflow-hidden">
                                 <TableIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                                 <div className="flex items-baseline gap-2 overflow-hidden">
-                                    <h3 className="text-[15px] font-bold text-foreground truncate">{selectedTable.name}</h3>
+                                    <h3 className="text-[15px] font-bold text-foreground truncate">{freshSelectedTable.name}</h3>
                                     <span className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-widest">
-                                        ({recordData?.total || 0} registros)
+                                        ({recordData?.total ?? 0} registros)
                                     </span>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-2">
                                 <Button
                                     size="sm"
                                     className="h-8 text-xs px-3"
-                                    onClick={() => {
-                                        setEditingRecord(undefined);
-                                        setIsRecordEditorOpen(true);
-                                    }}
+                                    onClick={() => { setEditingRecord(undefined); setIsRecordEditorOpen(true); }}
                                 >
                                     <Plus className="h-3.5 w-3.5 mr-1" />
                                     Nuevo Registro
@@ -385,9 +496,9 @@ export default function MetadataPage() {
                                         <DropdownMenuItem
                                             className="text-destructive focus:text-destructive text-xs"
                                             onClick={() => {
-                                                if (confirm(`¿Eliminar tabla "${selectedTable.name}"? Se perderán todos sus registros.`)) {
-                                                    setDeletingTableName(selectedTable.name);
-                                                    deleteTableMutation.mutate(selectedTable.name);
+                                                if (confirm(`¿Eliminar tabla "${freshSelectedTable.name}"? Se perderán todos sus registros.`)) {
+                                                    setDeletingTableName(freshSelectedTable.name);
+                                                    deleteTableMutation.mutate(freshSelectedTable.name);
                                                 }
                                             }}
                                         >
@@ -399,7 +510,7 @@ export default function MetadataPage() {
                             </div>
                         </div>
 
-                        {/* Record List View */}
+                        {/* Records Table */}
                         <div className="flex-1 overflow-hidden">
                             {recordsLoading ? (
                                 <div className="flex flex-col items-center justify-center h-full opacity-50">
@@ -413,89 +524,75 @@ export default function MetadataPage() {
                                     </div>
                                     <h4 className="text-[15px] font-semibold mb-1">Esta tabla no tiene registros</h4>
                                     <p className="text-[13px] text-muted-foreground max-w-xs mb-6">
-                                        Cree el primer registro agregando un objeto JSON o pares clave-valor.
+                                        Cree el primer registro rellenando los campos del esquema.
                                     </p>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         className="h-9 px-4 text-xs font-semibold border-dashed"
-                                        onClick={() => {
-                                            setEditingRecord(undefined);
-                                            setIsRecordEditorOpen(true);
-                                        }}
+                                        onClick={() => { setEditingRecord(undefined); setIsRecordEditorOpen(true); }}
                                     >
                                         <Plus className="h-3.5 w-3.5 mr-2" />
                                         Crear Registro
                                     </Button>
                                 </div>
                             ) : (
-                                <ScrollArea className="h-full px-8 pt-6">
-                                    <div className="overflow-x-auto">
-                                        <Table className="border-none">
-                                            <TableHeader className="[&_tr]:border-none">
-                                                <TableRow className="hover:bg-transparent border-none">
-                                                    <TableHead className="h-8 text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide px-0">Datos (JSON Property Map)</TableHead>
-                                                    <TableHead className="w-[120px] h-8 px-0" />
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {recordData.items.map((record) => (
-                                                    <TableRow
-                                                        key={record.id}
-                                                        className="group border-none hover:bg-muted/30 transition-colors"
-                                                    >
-                                                        <TableCell className="py-4 px-0 align-top">
-                                                            <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
-                                                                {Object.entries(record.data).length === 0 ? (
-                                                                    <span className="text-[12px] text-muted-foreground/40 italic px-2">{ } objeto vacío</span>
-                                                                ) : (
-                                                                    Object.entries(record.data).map(([key, val]) => (
-                                                                        <div
-                                                                            key={key}
-                                                                            className="inline-flex items-center gap-1.5 rounded-md border border-border/40 bg-background px-2 py-0.5"
-                                                                        >
-                                                                            <span className="text-[11px] font-bold uppercase tracking-tighter text-muted-foreground/80">{key}</span>
-                                                                            <div className="w-[1px] h-3 bg-border/40" />
-                                                                            <span className="text-[13px] text-foreground font-mono">{String(val)}</span>
-                                                                        </div>
-                                                                    ))
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="py-4 px-0 text-right align-top">
-                                                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
-                                                                    onClick={() => {
-                                                                        setEditingRecord(record);
-                                                                        setIsRecordEditorOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <Edit2 className="h-3.5 w-3.5" />
-                                                                </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-7 w-7 text-muted-foreground hover:text-destructive transition-colors"
-                                                                    onClick={() => {
-                                                                        if (confirm("¿Eliminar este registro de metadatos?")) {
-                                                                            deleteRecordMutation.mutate(record.id);
-                                                                        }
-                                                                    }}
-                                                                >
-                                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
+                                <div className="h-full overflow-auto">
+                                    <Table>
+                                        <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+                                            <TableRow>
+                                                <TableHead className="w-10 text-right text-[10px] text-muted-foreground font-normal select-none px-3">
+                                                    #
+                                                </TableHead>
+                                                {columns.map((col) => (
+                                                    <TableHead key={col.name} className="text-xs font-semibold px-3 whitespace-nowrap">
+                                                        <div className="flex items-center gap-1.5">
+                                                            {col.name}
+                                                            <Badge variant="outline" className="text-[9px] px-1 h-4 font-mono font-normal">{col.type}</Badge>
+                                                        </div>
+                                                    </TableHead>
                                                 ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
-                                    <div className="h-10" /> {/* Bottom spacer */}
-                                </ScrollArea>
+                                                <TableHead className="w-20 px-3" />
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {recordData.items.map((record, i) => (
+                                                <TableRow key={record.id} className="group">
+                                                    <TableCell className="text-right text-xs text-muted-foreground select-none px-3 py-2">
+                                                        {i + 1}
+                                                    </TableCell>
+                                                    {columns.map((col) => (
+                                                        <TableCell key={col.name} className="px-3 py-2 font-mono text-xs max-w-[200px] truncate">
+                                                            {formatCellValue(record.data[col.name], col.type)}
+                                                        </TableCell>
+                                                    ))}
+                                                    <TableCell className="px-3 py-2">
+                                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <Button
+                                                                variant="ghost" size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                                                onClick={() => { setEditingRecord(record); setIsRecordEditorOpen(true); }}
+                                                            >
+                                                                <Edit2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost" size="icon"
+                                                                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                                                onClick={() => {
+                                                                    if (confirm("¿Eliminar este registro?")) {
+                                                                        deleteRecordMutation.mutate(record.id);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             )}
                         </div>
                     </>
@@ -506,7 +603,7 @@ export default function MetadataPage() {
                         </div>
                         <h3 className="text-[18px] font-bold text-foreground">Gestión de Metadatos</h3>
                         <p className="text-[14px] text-muted-foreground max-w-sm mt-3 leading-relaxed">
-                            Elija una organización y una tabla en el panel izquierdo para gestionar su información personalizada.
+                            Elija una organización y una tabla en el panel izquierdo para gestionar su información.
                         </p>
                         <Button
                             variant="secondary"
@@ -521,53 +618,21 @@ export default function MetadataPage() {
             </div>
 
             {/* Dialogs */}
-            <Dialog open={isCreateTableOpen} onOpenChange={setIsCreateTableOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Crear Tabla de Metadatos</DialogTitle>
-                        <DialogDescription>
-                            Las tablas de metadatos le permiten almacenar información personalizada para su organización.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="tableName">Nombre de la Tabla</Label>
-                            <Input
-                                id="tableName"
-                                placeholder="ej: machine_properties"
-                                value={newTableName}
-                                onChange={(e) => setNewTableName(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="tableDesc">Descripción (opcional)</Label>
-                            <Input
-                                id="tableDesc"
-                                placeholder="ej: Propiedades estáticas de las máquinas"
-                                value={newTableDesc}
-                                onChange={(e) => setNewTableDesc(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCreateTableOpen(false)}>Cancelar</Button>
-                        <Button
-                            onClick={() => createTableMutation.mutate({ name: newTableName, description: newTableDesc })}
-                            disabled={!newTableName || createTableMutation.isPending}
-                        >
-                            Crear Tabla
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <CreateTableDialog
+                open={isCreateTableOpen}
+                onOpenChange={setIsCreateTableOpen}
+                onSave={(data) => createTableMutation.mutate(data)}
+                isPending={createTableMutation.isPending}
+            />
 
-            {isRecordEditorOpen && (
+            {isRecordEditorOpen && freshSelectedTable && (
                 <RecordEditorDialog
                     open={isRecordEditorOpen}
                     onOpenChange={setIsRecordEditorOpen}
-                    tableName={selectedTable?.name || ""}
+                    table={freshSelectedTable}
                     record={editingRecord}
                     onSave={(data) => saveRecordMutation.mutate(data)}
+                    isPending={saveRecordMutation.isPending}
                 />
             )}
         </div>

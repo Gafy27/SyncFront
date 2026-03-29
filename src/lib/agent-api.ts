@@ -2,8 +2,9 @@ import { API_BASE_URL, getAuthToken } from "./api"
 
 export interface AgentMessage {
   id?: string
-  role: "user" | "assistant" | "tool" | "system"
+  role: "user" | "assistant" | "tool" | "tool_call" | "tool_result" | "reasoning" | "system"
   content: string
+  language?: string
   reasoning?: string
   tool_name?: string
   tool_input?: Record<string, unknown>
@@ -16,6 +17,7 @@ export interface PendingToolData {
   tool_args?: Record<string, unknown>
   tool_input?: Record<string, unknown>
   description?: string
+  reasoning?: string
   requires_confirmation?: boolean
 }
 
@@ -60,15 +62,35 @@ export interface StoredSessionDetail {
 }
 
 export const agentApi = {
-  start: (orgId: string, userId: string, opts?: { initialPrompt?: string; resumeSessionId?: string }) =>
-    agentFetch<{ session_id: string }>(`/api/agent/${orgId}/start`, {
+  start: (
+    orgId: string,
+    userId: string,
+    opts?: {
+      initialPrompt?: string
+      resumeSessionId?: string
+      defaultBridge?: string
+      /** Human-readable space name for the workflow (JSON `space_name`), not a UUID. */
+      spaceName?: string
+    }
+  ) => {
+    const path = `/api/agent/${orgId}/start`
+    const spaceName = opts?.spaceName?.trim()
+    const body: Record<string, unknown> = {
+      user_id: userId,
+      initial_prompt: opts?.initialPrompt,
+      resume_session_id: opts?.resumeSessionId,
+      default_bridge: opts?.defaultBridge,
+    }
+    if (spaceName) body.space_name = spaceName
+
+    if (import.meta.env.DEV) {
+      console.debug("[agentApi.start]", { url: `${API_BASE_URL}${path}`, body })
+    }
+    return agentFetch<{ session_id: string }>(path, {
       method: "POST",
-      body: JSON.stringify({
-        user_id: userId,
-        initial_prompt: opts?.initialPrompt,
-        resume_session_id: opts?.resumeSessionId,
-      }),
-    }),
+      body: JSON.stringify(body),
+    })
+  },
 
   listSessions: (orgId: string, limit = 20) =>
     agentFetch<{ sessions: StoredSession[]; total: number }>(
@@ -94,6 +116,11 @@ export const agentApi = {
 
   confirm: (sessionId: string) =>
     agentFetch<{ status: string }>(`/api/agent/${sessionId}/confirm`, {
+      method: "POST",
+    }),
+
+  reject: (sessionId: string) =>
+    agentFetch<{ status: string }>(`/api/agent/${sessionId}/reject`, {
       method: "POST",
     }),
 

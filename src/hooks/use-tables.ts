@@ -121,11 +121,13 @@ export function useUpdateTable() {
       if (!selectedOrg) throw new Error("Organization required");
       const path = `/api/organizations/${selectedOrg}/workflows/${workflowId}/tables/${id}`;
       const body: Record<string, unknown> = { ...rest };
-      // Both streaming and batch wrap definition/type inside a function object
-      body.function = {
-        type: type ?? "sql",
-        ...(definition !== undefined ? { definition } : {}),
-      };
+      // Only include function object when updating type or definition
+      if (type !== undefined || definition !== undefined) {
+        body.function = {
+          type: type ?? "sql",
+          ...(definition !== undefined ? { definition } : {}),
+        };
+      }
       return apiRequest("PUT", path, body);
     },
     onSuccess: (_, variables) => {

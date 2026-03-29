@@ -3,6 +3,77 @@ import { agentApi, AgentApiError, AgentMessage, PendingToolData, StoredSession }
 import { API_BASE_URL, getAuthToken } from "@/lib/api"
 
 const STORAGE_KEY = "agent_chat_session"
+const TITLES_KEY = "agent_session_titles"
+
+function getSessionTitles(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(TITLES_KEY) || "{}") } catch { return {} }
+}
+
+function saveSessionTitle(sessionId: string, title: string) {
+  const titles = getSessionTitles()
+  titles[sessionId] = title
+  try { localStorage.setItem(TITLES_KEY, JSON.stringify(titles)) } catch {}
+}
+
+function normalizeIncomingMessage(payload: unknown): AgentMessage | null {
+  if (!payload || typeof payload !== "object") return null
+
+  const p = payload as Record<string, unknown>
+
+  // Native chat message format
+  if (typeof p.role === "string") {
+    return {
+      role: p.role as AgentMessage["role"],
+      content: typeof p.content === "string" ? p.content : "",
+      reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
+      language: typeof p.language === "string" ? p.language : undefined,
+      tool_name: typeof p.tool_name === "string" ? p.tool_name : undefined,
+      tool_input: typeof p.tool_input === "object" && p.tool_input ? (p.tool_input as Record<string, unknown>) : undefined,
+      tool_result: p.tool_result,
+      timestamp: typeof p.timestamp === "string" ? p.timestamp : undefined,
+      id: typeof p.id === "string" ? p.id : undefined,
+    }
+  }
+
+  // Tool call wrapper format from workflow stream:
+  // { part_kind: "tool-call", tool_name, args/tool_input/tool_args, reasoning? }
+  if (
+    p.part_kind === "tool-call" &&
+    (typeof p.tool_name === "string" || typeof p.name === "string")
+  ) {
+    const toolName = (typeof p.tool_name === "string" ? p.tool_name : p.name) as string
+    const toolInput =
+      (typeof p.tool_input === "object" && p.tool_input ? p.tool_input : undefined) ??
+      (typeof p.tool_args === "object" && p.tool_args ? p.tool_args : undefined) ??
+      (typeof p.args === "object" && p.args ? p.args : undefined)
+
+    return {
+      role: "tool_call",
+      content: "",
+      tool_name: toolName,
+      tool_input: toolInput as Record<string, unknown> | undefined,
+      reasoning: typeof p.reasoning === "string" ? p.reasoning : undefined,
+      id: typeof p.id === "string" ? p.id : undefined,
+    }
+  }
+
+  // Decision wrapper format:
+  // { decision: { type: "text", answer: "...", reasoning?: "...", language?: "sql" } }
+  const decision = p.decision
+  if (decision && typeof decision === "object") {
+    const d = decision as Record<string, unknown>
+    if (d.type === "text" && typeof d.answer === "string") {
+      return {
+        role: "assistant",
+        content: d.answer,
+        reasoning: typeof d.reasoning === "string" ? d.reasoning : undefined,
+        language: typeof d.language === "string" ? d.language : undefined,
+      }
+    }
+  }
+
+  return null
+}
 
 function loadSession(): { sessionId: string; messages: AgentMessage[] } | null {
   try {
@@ -23,7 +94,7 @@ function clearSession() {
   localStorage.removeItem(STORAGE_KEY)
 }
 
-export function useAgentChat(orgId: string | null, userId = "user") {
+export function useAgentChat(orgId: string | null, userId = "user", defaultBridge?: string, spaceName?: string) {
   const saved = loadSession()
 
   const [sessionId, setSessionId] = useState<string | null>(saved?.sessionId ?? null)
@@ -55,9 +126,12 @@ export function useAgentChat(orgId: string | null, userId = "user") {
     agentApi
       .history(saved.sessionId)
       .then((history) => {
-        const msgs: AgentMessage[] = Array.isArray(history)
+        const rawMsgs: unknown[] = Array.isArray(history)
           ? history
-          : (history as { messages?: AgentMessage[] })?.messages ?? []
+          : (history as { messages?: unknown[] })?.messages ?? []
+        const msgs: AgentMessage[] = rawMsgs
+          .map((m) => normalizeIncomingMessage(m))
+          .filter((m): m is AgentMessage => !!m)
         if (msgs.length > 0) {
           setMessages(msgs)
           // All restored messages are already "seen" — they belong to this workflow
@@ -167,7 +241,11 @@ export function useAgentChat(orgId: string | null, userId = "user") {
                 }
                 streamIndex++
 
-                const msg = payload as AgentMessage
+                const msg = normalizeIncomingMessage(payload)
+                if (!msg) {
+                  currentEvent = "message"
+                  continue
+                }
                 setMessages((prev) => [...prev, msg])
                 workflowSeenRef.current++
 
@@ -200,14 +278,14 @@ export function useAgentChat(orgId: string | null, userId = "user") {
     clearSession()
     workflowSeenRef.current = 0
     try {
-      const { session_id } = await agentApi.start(orgId, userId)
+      const { session_id } = await agentApi.start(orgId, userId, { defaultBridge, spaceName })
       setSessionId(session_id)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to start session")
     } finally {
       setIsStarting(false)
     }
-  }, [orgId, userId])
+  }, [orgId, userId, defaultBridge, spaceName])
 
   const resumeSession = useCallback(async (storedSessionId: string) => {
     stopStreaming()
@@ -247,6 +325,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
       if (isWaiting) return
       if (!sessionId && !pendingResumeId && !orgId) return
 
+      const isFirstMessage = messages.length === 0
       setMessages((prev) => [...prev, { role: "user", content }])
       workflowSeenRef.current++
       const skipCount = workflowSeenRef.current
@@ -257,12 +336,17 @@ export function useAgentChat(orgId: string | null, userId = "user") {
         // Lazily start the workflow on first message
         let sid = sessionId
         if (!sid) {
-          const opts = pendingResumeId ? { resumeSessionId: pendingResumeId } : undefined
+          const opts = pendingResumeId
+            ? { resumeSessionId: pendingResumeId, defaultBridge, spaceName }
+            : { defaultBridge, spaceName }
           const { session_id } = await agentApi.start(orgId!, userId, opts)
           sid = session_id
           setSessionId(sid)
           setPendingResumeId(null)
         }
+
+        // Store the first prompt as the session title
+        if (isFirstMessage) saveSessionTitle(sid, content)
 
         await agentApi.prompt(sid, content)
         startStreaming(sid, skipCount)
@@ -281,7 +365,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
         }
       }
     },
-    [sessionId, pendingResumeId, orgId, userId, isWaiting, startStreaming]
+    [sessionId, pendingResumeId, orgId, userId, isWaiting, startStreaming, defaultBridge, spaceName]
   )
 
   const confirmTool = useCallback(async () => {
@@ -301,8 +385,17 @@ export function useAgentChat(orgId: string | null, userId = "user") {
   const denyTool = useCallback(async () => {
     if (!sessionId) return
     setPendingTool(null)
-    await sendMessage("Please skip that action and do not execute it. Continue without it.")
-  }, [sessionId, sendMessage])
+    setIsWaiting(true)
+    setError(null)
+    const skipCount = workflowSeenRef.current
+    try {
+      await agentApi.reject(sessionId)
+      startStreaming(sessionId, skipCount)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to reject")
+      setIsWaiting(false)
+    }
+  }, [sessionId, startStreaming])
 
   const endSession = useCallback(async () => {
     stopStreaming()
@@ -333,6 +426,7 @@ export function useAgentChat(orgId: string | null, userId = "user") {
     startSession,
     resumeSession,
     listSessions,
+    getSessionTitles,
     sendMessage,
     confirmTool,
     denyTool,

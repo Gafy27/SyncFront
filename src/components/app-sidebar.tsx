@@ -11,6 +11,7 @@ import {
   Building2,
   Settings as SettingsIcon,
   Database,
+  Sparkles,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -55,6 +56,7 @@ const menuItems = [
   { title: "Workflows", url: "/workflows", icon: Workflow },
   { title: "SQL Editor", url: "/sql-editor", icon: TerminalSquare },
   { title: "Metadatos", url: "/metadata", icon: Database },
+  { title: "Agent Spaces", url: "/spaces", icon: Sparkles },
 ];
 
 export function AppSidebar() {

@@ -202,8 +202,8 @@ export function CreateTableDialog({ workflowId, workflowType }: Props) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="gap-2" disabled={!workflowId}>
-                    <Plus className="h-4 w-4" /> Add Table
+                <Button className="h-6 w-6 p-0 hover:bg-muted text-muted-foreground hover:text-foreground transition-all" variant="ghost" disabled={!workflowId}>
+                    <Plus className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[420px]">

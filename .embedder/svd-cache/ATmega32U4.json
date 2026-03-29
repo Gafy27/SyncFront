@@ -1,0 +1,4896 @@
+{
+  "name": "ATmega32U4",
+  "description": "No description available.",
+  "version": "1.0",
+  "addressUnitBits": 8,
+  "width": 8,
+  "peripherals": [
+    {
+      "name": "AC",
+      "description": "Analog Comparator",
+      "baseAddress": 8388688,
+      "registers": [
+        {
+          "name": "ACSR",
+          "description": "Analog Comparator Control And Status Register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ACIS",
+              "description": "Analog Comparator Interrupt Mode Select bits",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "INTERRUPT_ON_TOGGLE",
+                  "value": 0,
+                  "description": "Interrupt on Toggle"
+                },
+                {
+                  "name": "RESERVED",
+                  "value": 1,
+                  "description": "Reserved"
+                },
+                {
+                  "name": "INTERRUPT_ON_FALLING_EDGE",
+                  "value": 2,
+                  "description": "Interrupt on Falling Edge"
+                },
+                {
+                  "name": "INTERRUPT_ON_RISING_EDGE",
+                  "value": 3,
+                  "description": "Interrupt on Rising Edge"
+                }
+              ]
+            },
+            {
+              "name": "ACIC",
+              "description": "Analog Comparator Input Capture Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ACIE",
+              "description": "Analog Comparator Interrupt Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ACI",
+              "description": "Analog Comparator Interrupt Flag",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ACO",
+              "description": "Analog Compare Output",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ACBG",
+              "description": "Analog Comparator Bandgap Select",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ACD",
+              "description": "Analog Comparator Disable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "ADCSRB",
+          "description": "ADC Control and Status Register B",
+          "addressOffset": 43,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ACME",
+              "description": "Analog Comparator Multiplexer Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "DIDR1",
+          "description": "No Description.",
+          "addressOffset": 47,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "AIN0D",
+              "description": "AIN0 Digital Input Disable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "AIN1D",
+              "description": "AIN1 Digital Input Disable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ADC",
+      "description": "Analog-to-Digital Converter",
+      "baseAddress": 8388728,
+      "registers": [
+        {
+          "name": "ADC",
+          "description": "ADC Data Register Bytes",
+          "addressOffset": 0,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "ADCSRA",
+          "description": "The ADC Control and Status register (read-only for debugger)",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ADPS",
+              "description": "ADC Prescaler Select Bits",
+              "bitOffset": 0,
+              "bitWidth": 3,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "2",
+                  "value": 1,
+                  "description": "2"
+                },
+                {
+                  "name": "4",
+                  "value": 2,
+                  "description": "4"
+                },
+                {
+                  "name": "8",
+                  "value": 3,
+                  "description": "8"
+                },
+                {
+                  "name": "16",
+                  "value": 4,
+                  "description": "16"
+                },
+                {
+                  "name": "32",
+                  "value": 5,
+                  "description": "32"
+                },
+                {
+                  "name": "64",
+                  "value": 6,
+                  "description": "64"
+                },
+                {
+                  "name": "128",
+                  "value": 7,
+                  "description": "128"
+                }
+              ]
+            },
+            {
+              "name": "ADIE",
+              "description": "ADC Interrupt Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADIF",
+              "description": "ADC Interrupt Flag",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADATE",
+              "description": "ADC Auto Trigger Enable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADSC",
+              "description": "ADC Start Conversion",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADEN",
+              "description": "ADC Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "ADCSRB",
+          "description": "ADC Control and Status Register B",
+          "addressOffset": 3,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ADTS",
+              "description": "ADC Auto Trigger Sources",
+              "bitOffset": 0,
+              "bitWidth": 4,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "FREE_RUNNING_MODE",
+                  "value": 0,
+                  "description": "Free Running mode"
+                },
+                {
+                  "name": "ANALOG_COMPARATOR",
+                  "value": 1,
+                  "description": "Analog Comparator"
+                },
+                {
+                  "name": "EXTERNAL_INTERRUPT_REQUEST_0",
+                  "value": 2,
+                  "description": "External Interrupt Request 0"
+                },
+                {
+                  "name": "TIMER_COUNTER0_COMPARE_MATCH_A",
+                  "value": 3,
+                  "description": "Timer/Counter0 Compare Match A"
+                },
+                {
+                  "name": "TIMER_COUNTER0_OVERFLOW",
+                  "value": 4,
+                  "description": "Timer/Counter0 Overflow"
+                },
+                {
+                  "name": "TIMER_COUNTER1_COMPARE_MATCH_B",
+                  "value": 5,
+                  "description": "Timer/Counter1 Compare Match B"
+                },
+                {
+                  "name": "TIMER_COUNTER1_OVERFLOW",
+                  "value": 6,
+                  "description": "Timer/Counter1 Overflow"
+                },
+                {
+                  "name": "TIMER_COUNTER1_CAPTURE_EVENT",
+                  "value": 7,
+                  "description": "Timer/Counter1 Capture Event"
+                },
+                {
+                  "name": "TIMER_COUNTER4_OVERFLOW",
+                  "value": 8,
+                  "description": "Timer/Counter4 Overflow"
+                },
+                {
+                  "name": "TIMER_COUNTER4_COMPARE_MATCH_A",
+                  "value": 9,
+                  "description": "Timer/Counter4 Compare Match A"
+                },
+                {
+                  "name": "TIMER_COUNTER4_COMPARE_MATCH_B",
+                  "value": 10,
+                  "description": "Timer/Counter4 Compare Match B"
+                },
+                {
+                  "name": "TIMER_COUNTER4_COMPARE_MATCH_D",
+                  "value": 11,
+                  "description": "Timer/Counter4 Compare Match D"
+                }
+              ]
+            },
+            {
+              "name": "MUX5",
+              "description": "Analog Channel and Gain Selection Bits",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADHSM",
+              "description": "ADC High Speed Mode",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "ADMUX",
+          "description": "The ADC multiplexer Selection Register",
+          "addressOffset": 4,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "MUX",
+              "description": "Analog Channel and Gain Selection Bits",
+              "bitOffset": 0,
+              "bitWidth": 5,
+              "access": "read-write"
+            },
+            {
+              "name": "ADLAR",
+              "description": "Left Adjust Result",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "REFS",
+              "description": "Reference Selection Bits",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "AREF_INTERNAL_VREF_TURNED_OFF",
+                  "value": 0,
+                  "description": "AREF, Internal Vref turned off"
+                },
+                {
+                  "name": "AVCC_WITH_EXTERNAL_CAPACITOR_AT_AREF_PIN",
+                  "value": 1,
+                  "description": "AVCC with external capacitor at AREF pin"
+                },
+                {
+                  "name": "RESERVED",
+                  "value": 2,
+                  "description": "Reserved"
+                },
+                {
+                  "name": "INTERNAL_2_56V_VOLTAGE_REFERENCE_WITH_EXTERNAL_CAPACITOR_AT_AREF_PIN",
+                  "value": 3,
+                  "description": "Internal 2.56V Voltage Reference with external capacitor at AREF pin"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "DIDR0",
+          "description": "Digital Input Disable Register 0",
+          "addressOffset": 6,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ADC0D",
+              "description": "ADC0 Digital input Disable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC1D",
+              "description": "ADC1 Digital input Disable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC2D",
+              "description": "ADC2 Digital input Disable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC3D",
+              "description": "ADC3 Digital input Disable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC4D",
+              "description": "ADC4 Digital input Disable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC5D",
+              "description": "ADC5 Digital input Disable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC6D",
+              "description": "ADC6 Digital input Disable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC7D",
+              "description": "ADC7 Digital input Disable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "DIDR2",
+          "description": "Digital Input Disable Register 2",
+          "addressOffset": 5,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ADC8D",
+              "description": "ADC8 Digital input Disable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC9D",
+              "description": "ADC9 Digital input Disable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC10D",
+              "description": "ADC10 Digital input Disable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC11D",
+              "description": "ADC11 Digital input Disable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC12D",
+              "description": "ADC12 Digital input Disable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ADC13D",
+              "description": "ADC13 Digital input Disable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BOOT_LOAD",
+      "description": "Bootloader",
+      "baseAddress": 8388695,
+      "registers": [
+        {
+          "name": "SPMCSR",
+          "description": "Store Program Memory Control Register",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SPMEN",
+              "description": "Store Program Memory Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PGERS",
+              "description": "Page Erase",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PGWRT",
+              "description": "Page Write",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "BLBSET",
+              "description": "Boot Lock Bit Set",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RWWSRE",
+              "description": "Read While Write section read enable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SIGRD",
+              "description": "Signature Row Read",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RWWSB",
+              "description": "Read While Write Section Busy",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SPMIE",
+              "description": "SPM Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CPU",
+      "description": "CPU Registers",
+      "baseAddress": 8388670,
+      "registers": [
+        {
+          "name": "CLKPR",
+          "description": "No Description.",
+          "addressOffset": 35,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CLKPS",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 4,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "1",
+                  "value": 0,
+                  "description": "1"
+                },
+                {
+                  "name": "2",
+                  "value": 1,
+                  "description": "2"
+                },
+                {
+                  "name": "4",
+                  "value": 2,
+                  "description": "4"
+                },
+                {
+                  "name": "8",
+                  "value": 3,
+                  "description": "8"
+                },
+                {
+                  "name": "16",
+                  "value": 4,
+                  "description": "16"
+                },
+                {
+                  "name": "32",
+                  "value": 5,
+                  "description": "32"
+                },
+                {
+                  "name": "64",
+                  "value": 6,
+                  "description": "64"
+                },
+                {
+                  "name": "128",
+                  "value": 7,
+                  "description": "128"
+                },
+                {
+                  "name": "256",
+                  "value": 8,
+                  "description": "256"
+                }
+              ]
+            },
+            {
+              "name": "CLKPCE",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "CLKSEL0",
+          "description": "No Description.",
+          "addressOffset": 135,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CLKS",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EXTE",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RCE",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EXSUT",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "RCSUT",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "CLKSEL1",
+          "description": "No Description.",
+          "addressOffset": 136,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EXCKSEL",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 4,
+              "access": "read-write"
+            },
+            {
+              "name": "RCCKSEL",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 4,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "CLKSTA",
+          "description": "No Description.",
+          "addressOffset": 137,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EXTON",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RCON",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "EIND",
+          "description": "Extended Indirect Register",
+          "addressOffset": 30,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "GPIOR0",
+          "description": "General Purpose IO Register 0",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "GPIOR00",
+              "description": "General Purpose IO Register 0 bit 0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR01",
+              "description": "General Purpose IO Register 0 bit 1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR02",
+              "description": "General Purpose IO Register 0 bit 2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR03",
+              "description": "General Purpose IO Register 0 bit 3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR04",
+              "description": "General Purpose IO Register 0 bit 4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR05",
+              "description": "General Purpose IO Register 0 bit 5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR06",
+              "description": "General Purpose IO Register 0 bit 6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "GPIOR07",
+              "description": "General Purpose IO Register 0 bit 7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "GPIOR1",
+          "description": "General Purpose IO Register 1",
+          "addressOffset": 12,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "GPIOR",
+              "description": "General Purpose IO Register 1 bis",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "GPIOR2",
+          "description": "General Purpose IO Register 2",
+          "addressOffset": 13,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "GPIOR",
+              "description": "General Purpose IO Register 2 bis",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "MCUCR",
+          "description": "MCU Control Register",
+          "addressOffset": 23,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "IVCE",
+              "description": "Interrupt Vector Change Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "IVSEL",
+              "description": "Interrupt Vector Select",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PUD",
+              "description": "Pull-up disable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "JTD",
+              "description": "JTAG Interface Disable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "MCUSR",
+          "description": "MCU Status Register",
+          "addressOffset": 22,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PORF",
+              "description": "Power-on reset flag",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EXTRF",
+              "description": "External Reset Flag",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "BORF",
+              "description": "Brown-out Reset Flag",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WDRF",
+              "description": "Watchdog Reset Flag",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "JTRF",
+              "description": "JTAG Reset Flag",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "OSCCAL",
+          "description": "Oscillator Calibration Value",
+          "addressOffset": 40,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "OSCCAL",
+              "description": "Oscillator Calibration",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PRR0",
+          "description": "Power Reduction Register0",
+          "addressOffset": 38,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PRADC",
+              "description": "Power Reduction ADC",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRUSART0",
+              "description": "Power Reduction USART",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRSPI",
+              "description": "Power Reduction Serial Peripheral Interface",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTIM1",
+              "description": "Power Reduction Timer/Counter1",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTIM0",
+              "description": "Power Reduction Timer/Counter0",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTIM2",
+              "description": "Power Reduction Timer/Counter2",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTWI",
+              "description": "Power Reduction TWI",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PRR1",
+          "description": "Power Reduction Register1",
+          "addressOffset": 39,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PRUSART1",
+              "description": "Power Reduction USART1",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTIM3",
+              "description": "Power Reduction Timer/Counter3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRTIM4",
+              "description": "Power Reduction Timer/Counter4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PRUSB",
+              "description": "Power Reduction USB",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "RAMPZ",
+          "description": "Extended Z-pointer Register for ELPM/SPM",
+          "addressOffset": 29,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "RAMPZ",
+              "description": "Extended Z-Pointer Value",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "DEFAULT_VALUE_OF_Z_POINTER_MSB_S",
+                  "value": 0,
+                  "description": "Default value of Z-pointer MSB's."
+                }
+              ]
+            },
+            {
+              "name": "Res",
+              "description": "Reserved",
+              "bitOffset": 2,
+              "bitWidth": 6,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "RCCTRL",
+          "description": "Oscillator Control Register",
+          "addressOffset": 41,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "RCFREQ",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "SMCR",
+          "description": "Sleep Mode Control Register",
+          "addressOffset": 21,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SE",
+              "description": "Sleep Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SM",
+              "description": "Sleep Mode Select bits",
+              "bitOffset": 1,
+              "bitWidth": 3,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "IDLE",
+                  "value": 0,
+                  "description": "Idle"
+                },
+                {
+                  "name": "ADC",
+                  "value": 1,
+                  "description": "ADC Noise Reduction (If Available)"
+                },
+                {
+                  "name": "PDOWN",
+                  "value": 2,
+                  "description": "Power Down"
+                },
+                {
+                  "name": "PSAVE",
+                  "value": 3,
+                  "description": "Power Save"
+                },
+                {
+                  "name": "VAL_0x04",
+                  "value": 4,
+                  "description": "Reserved"
+                },
+                {
+                  "name": "VAL_0x05",
+                  "value": 5,
+                  "description": "Reserved"
+                },
+                {
+                  "name": "STDBY",
+                  "value": 6,
+                  "description": "Standby"
+                },
+                {
+                  "name": "ESTDBY",
+                  "value": 7,
+                  "description": "Extended Standby"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "SP",
+          "description": "Stack Pointer",
+          "addressOffset": 31,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "SREG",
+          "description": "Status Register",
+          "addressOffset": 33,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "C",
+              "description": "Carry Flag",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "Z",
+              "description": "Zero Flag",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "N",
+              "description": "Negative Flag",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "V",
+              "description": "Two's Complement Overflow Flag",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "S",
+              "description": "Sign Bit",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "H",
+              "description": "Half Carry Flag",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "T",
+              "description": "Bit Copy Storage",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "I",
+              "description": "Global Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EEPROM",
+      "description": "EEPROM",
+      "baseAddress": 8388671,
+      "registers": [
+        {
+          "name": "EEAR",
+          "description": "EEPROM Address Register Low Bytes",
+          "addressOffset": 2,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "EECR",
+          "description": "EEPROM Control Register",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EERE",
+              "description": "EEPROM Read Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EEPE",
+              "description": "EEPROM Write Enable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EEMPE",
+              "description": "EEPROM Master Write Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EERIE",
+              "description": "EEPROM Ready Interrupt Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EEPM",
+              "description": "EEPROM Programming Mode Bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "ERASE_AND_WRITE_IN_ONE_OPERATION",
+                  "value": 0,
+                  "description": "Erase and Write in one operation"
+                },
+                {
+                  "name": "ERASE_ONLY",
+                  "value": 1,
+                  "description": "Erase Only"
+                },
+                {
+                  "name": "WRITE_ONLY",
+                  "value": 2,
+                  "description": "Write Only"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "EEDR",
+          "description": "EEPROM Data Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "name": "EXINT",
+      "description": "External Interrupts",
+      "baseAddress": 8388667,
+      "registers": [
+        {
+          "name": "EICRA",
+          "description": "External Interrupt Control Register A",
+          "addressOffset": 46,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ISC0",
+              "description": "External Interrupt Sense Control Bit",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC1",
+              "description": "External Interrupt Sense Control Bit",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC2",
+              "description": "External Interrupt Sense Control Bit",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC3",
+              "description": "External Interrupt Sense Control Bit",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "EICRB",
+          "description": "External Interrupt Control Register B",
+          "addressOffset": 47,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ISC4",
+              "description": "External Interrupt 7-4 Sense Control Bit",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC5",
+              "description": "External Interrupt 7-4 Sense Control Bit",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC6",
+              "description": "External Interrupt 7-4 Sense Control Bit",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            },
+            {
+              "name": "ISC7",
+              "description": "External Interrupt 7-4 Sense Control Bit",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "LOW_LEVEL_OF_INTX",
+                  "value": 0,
+                  "description": "Low Level of INTX"
+                },
+                {
+                  "name": "ANY_LOGICAL_CHANGE_OF_INTX",
+                  "value": 1,
+                  "description": "Any Logical Change of INTX"
+                },
+                {
+                  "name": "FALLING_EDGE_OF_INTX",
+                  "value": 2,
+                  "description": "Falling Edge of INTX"
+                },
+                {
+                  "name": "RISING_EDGE_OF_INTX",
+                  "value": 3,
+                  "description": "Rising Edge of INTX"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "EIFR",
+          "description": "External Interrupt Flag Register (read-only for debugger)",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "INTF",
+              "description": "External Interrupt Flags",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "EIMSK",
+          "description": "External Interrupt Mask Register",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "INT",
+              "description": "External Interrupt Request 7 Enable",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PCICR",
+          "description": "Pin Change Interrupt Control Register",
+          "addressOffset": 45,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PCIE0",
+              "description": "Pin Change Interrupt Enable 0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PCIFR",
+          "description": "Pin Change Interrupt Flag Register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PCIF0",
+              "description": "Pin Change Interrupt Flag 0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PCMSK0",
+          "description": "Pin Change Mask Register 0",
+          "addressOffset": 48,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "name": "JTAG",
+      "description": "JTAG Interface",
+      "baseAddress": 8388689,
+      "registers": [
+        {
+          "name": "MCUCR",
+          "description": "MCU Control Register",
+          "addressOffset": 4,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "JTD",
+              "description": "JTAG Interface Disable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "MCUSR",
+          "description": "MCU Status Register (read-only for debugger)",
+          "addressOffset": 3,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "JTRF",
+              "description": "JTAG Reset Flag",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "OCDR",
+          "description": "On-Chip Debug Related Register in I/O Memory (write-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "name": "PLL",
+      "description": "Phase Locked Loop",
+      "baseAddress": 8388681,
+      "registers": [
+        {
+          "name": "PLLCSR",
+          "description": "PLL Status and Control register",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PLOCK",
+              "description": "PLL Lock Status Bit",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PLLE",
+              "description": "PLL Enable Bit",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PINDIV",
+              "description": "PLL prescaler Bit 2",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PLLFRQ",
+          "description": "PLL Frequency Control Register",
+          "addressOffset": 9,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PDIV",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 4,
+              "access": "read-write"
+            },
+            {
+              "name": "PLLTM",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "PLLUSB",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PINMUX",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PORTB",
+      "description": "I/O Port",
+      "baseAddress": 8388643,
+      "registers": [
+        {
+          "name": "DDRB",
+          "description": "Port B Data Direction Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PB0",
+              "description": "Pin B0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB1",
+              "description": "Pin B1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB2",
+              "description": "Pin B2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB3",
+              "description": "Pin B3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB4",
+              "description": "Pin B4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB5",
+              "description": "Pin B5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB6",
+              "description": "Pin B6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB7",
+              "description": "Pin B7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PINB",
+          "description": "Port B Input Pins (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PB0",
+              "description": "Pin B0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB1",
+              "description": "Pin B1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB2",
+              "description": "Pin B2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB3",
+              "description": "Pin B3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB4",
+              "description": "Pin B4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB5",
+              "description": "Pin B5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB6",
+              "description": "Pin B6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB7",
+              "description": "Pin B7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PORTB",
+          "description": "Port B Data Register",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PB0",
+              "description": "Pin B0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB1",
+              "description": "Pin B1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB2",
+              "description": "Pin B2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB3",
+              "description": "Pin B3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB4",
+              "description": "Pin B4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB5",
+              "description": "Pin B5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB6",
+              "description": "Pin B6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PB7",
+              "description": "Pin B7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PORTC",
+      "description": "I/O Port",
+      "baseAddress": 8388646,
+      "registers": [
+        {
+          "name": "DDRC",
+          "description": "Port C Data Direction Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PC6",
+              "description": "Pin C6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PC7",
+              "description": "Pin C7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PINC",
+          "description": "Port C Input Pins (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PC6",
+              "description": "Pin C6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PC7",
+              "description": "Pin C7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PORTC",
+          "description": "Port C Data Register",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PC6",
+              "description": "Pin C6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PC7",
+              "description": "Pin C7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PORTD",
+      "description": "I/O Port",
+      "baseAddress": 8388649,
+      "registers": [
+        {
+          "name": "DDRD",
+          "description": "Port D Data Direction Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PD0",
+              "description": "Pin D0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD1",
+              "description": "Pin D1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD2",
+              "description": "Pin D2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD3",
+              "description": "Pin D3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD4",
+              "description": "Pin D4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD5",
+              "description": "Pin D5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD6",
+              "description": "Pin D6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD7",
+              "description": "Pin D7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PIND",
+          "description": "Port D Input Pins (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PD0",
+              "description": "Pin D0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD1",
+              "description": "Pin D1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD2",
+              "description": "Pin D2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD3",
+              "description": "Pin D3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD4",
+              "description": "Pin D4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD5",
+              "description": "Pin D5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD6",
+              "description": "Pin D6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD7",
+              "description": "Pin D7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PORTD",
+          "description": "Port D Data Register",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PD0",
+              "description": "Pin D0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD1",
+              "description": "Pin D1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD2",
+              "description": "Pin D2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD3",
+              "description": "Pin D3",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD4",
+              "description": "Pin D4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD5",
+              "description": "Pin D5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD6",
+              "description": "Pin D6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PD7",
+              "description": "Pin D7",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PORTE",
+      "description": "I/O Port",
+      "baseAddress": 8388652,
+      "registers": [
+        {
+          "name": "DDRE",
+          "description": "Data Direction Register, Port E",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PE2",
+              "description": "Pin E2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PE6",
+              "description": "Pin E6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PINE",
+          "description": "Input Pins, Port E (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PE2",
+              "description": "Pin E2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PE6",
+              "description": "Pin E6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PORTE",
+          "description": "Data Register, Port E",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PE2",
+              "description": "Pin E2",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PE6",
+              "description": "Pin E6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PORTF",
+      "description": "I/O Port",
+      "baseAddress": 8388655,
+      "registers": [
+        {
+          "name": "DDRF",
+          "description": "Data Direction Register, Port F",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PF0",
+              "description": "Pin F0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF1",
+              "description": "Pin F1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF4",
+              "description": "Pin F4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF5",
+              "description": "Pin F5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF6",
+              "description": "Pin F6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PINF",
+          "description": "Input Pins, Port F (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PF0",
+              "description": "Pin F0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF1",
+              "description": "Pin F1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF4",
+              "description": "Pin F4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF5",
+              "description": "Pin F5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF6",
+              "description": "Pin F6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "PORTF",
+          "description": "Data Register, Port F",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PF0",
+              "description": "Pin F0",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF1",
+              "description": "Pin F1",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF4",
+              "description": "Pin F4",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF5",
+              "description": "Pin F5",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PF6",
+              "description": "Pin F6",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SPI",
+      "description": "Serial Peripheral Interface",
+      "baseAddress": 8388684,
+      "registers": [
+        {
+          "name": "SPCR",
+          "description": "SPI Control Register",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SPR",
+              "description": "SPI Clock Rate Selects",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "FOSC_4",
+                  "value": 0,
+                  "description": "fosc/4"
+                },
+                {
+                  "name": "FOSC_16",
+                  "value": 1,
+                  "description": "fosc/16"
+                },
+                {
+                  "name": "FOSC_128",
+                  "value": 3,
+                  "description": "fosc/128"
+                }
+              ]
+            },
+            {
+              "name": "CPHA",
+              "description": "Clock Phase",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "CPOL",
+              "description": "Clock polarity",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "MSTR",
+              "description": "Master/Slave Select",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "DORD",
+              "description": "Data Order",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SPE",
+              "description": "SPI Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SPIE",
+              "description": "SPI Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "SPDR",
+          "description": "SPI Data Register (write-only for debugger)",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "SPSR",
+          "description": "SPI Status Register (read-only for debugger)",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SPI2X",
+              "description": "Double SPI Speed Bit",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WCOL",
+              "description": "Write Collision Flag",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SPIF",
+              "description": "SPI Interrupt Flag",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TC0",
+      "description": "Timer/Counter, 8-bit",
+      "baseAddress": 8388661,
+      "registers": [
+        {
+          "name": "GTCCR",
+          "description": "General Timer/Counter Control Register",
+          "addressOffset": 14,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PSRSYNC",
+              "description": "Prescaler Reset for Synchronous Timer/Counters",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PSRASY",
+              "description": "Prescaler Reset for Asynchronous Timer/Counters",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TSM",
+              "description": "Timer/Counter Synchronization Mode",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "OCR0A",
+          "description": "Timer/Counter0 Output Compare Register",
+          "addressOffset": 18,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR0B",
+          "description": "Timer/Counter0 Output Compare Register",
+          "addressOffset": 19,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TCCR0A",
+          "description": "Timer/Counter Control Register A",
+          "addressOffset": 15,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "WGM0",
+              "description": "Waveform Generation Mode",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM0B",
+              "description": "Compare Output Mode, Fast PWm",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM0A",
+              "description": "Compare Output Mode, Phase Correct PWM Mode",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR0B",
+          "description": "Timer/Counter Control Register B",
+          "addressOffset": 16,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CS0",
+              "description": "Clock Select",
+              "bitOffset": 0,
+              "bitWidth": 3,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "NO_CLOCK_SOURCE_STOPPED",
+                  "value": 0,
+                  "description": "No Clock Source (Stopped)"
+                },
+                {
+                  "name": "RUNNING_NO_PRESCALING",
+                  "value": 1,
+                  "description": "Running, No Prescaling"
+                },
+                {
+                  "name": "RUNNING_CLK_8",
+                  "value": 2,
+                  "description": "Running, CLK/8"
+                },
+                {
+                  "name": "RUNNING_CLK_64",
+                  "value": 3,
+                  "description": "Running, CLK/64"
+                },
+                {
+                  "name": "RUNNING_CLK_256",
+                  "value": 4,
+                  "description": "Running, CLK/256"
+                },
+                {
+                  "name": "RUNNING_CLK_1024",
+                  "value": 5,
+                  "description": "Running, CLK/1024"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_FALLING_EDGE",
+                  "value": 6,
+                  "description": "Running, ExtClk Tn Falling Edge"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_RISING_EDGE",
+                  "value": 7,
+                  "description": "Running, ExtClk Tn Rising Edge"
+                }
+              ]
+            },
+            {
+              "name": "WGM02",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC0B",
+              "description": "Force Output Compare B",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC0A",
+              "description": "Force Output Compare A",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCNT0",
+          "description": "Timer/Counter0",
+          "addressOffset": 17,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TIFR0",
+          "description": "Timer/Counter0 Interrupt Flag register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOV0",
+              "description": "Timer/Counter0 Overflow Flag",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF0A",
+              "description": "Timer/Counter0 Output Compare Flag 0A",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF0B",
+              "description": "Timer/Counter0 Output Compare Flag 0B",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TIMSK0",
+          "description": "Timer/Counter0 Interrupt Mask Register",
+          "addressOffset": 57,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOIE0",
+              "description": "Timer/Counter0 Overflow Interrupt Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE0A",
+              "description": "Timer/Counter0 Output Compare Match A Interrupt Enable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE0B",
+              "description": "Timer/Counter0 Output Compare Match B Interrupt Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TC1",
+      "description": "Timer/Counter, 16-bit",
+      "baseAddress": 8388662,
+      "registers": [
+        {
+          "name": "ICR1",
+          "description": "Timer/Counter1 Input Capture Register Bytes",
+          "addressOffset": 80,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR1A",
+          "description": "Timer/Counter1 Output Compare Register A Bytes",
+          "addressOffset": 82,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR1B",
+          "description": "Timer/Counter1 Output Compare Register B Bytes",
+          "addressOffset": 84,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR1C",
+          "description": "Timer/Counter1 Output Compare Register C Bytes",
+          "addressOffset": 86,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TCCR1A",
+          "description": "Timer/Counter1 Control Register A",
+          "addressOffset": 74,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "WGM1",
+              "description": "Waveform Generation Mode",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM1C",
+              "description": "Compare Output Mode 1C, bits",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM1B",
+              "description": "Compare Output Mode 1B, bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM1A",
+              "description": "Compare Output Mode 1A, bits",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR1B",
+          "description": "Timer/Counter1 Control Register B",
+          "addressOffset": 75,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CS1",
+              "description": "Prescaler source of Timer/Counter 1",
+              "bitOffset": 0,
+              "bitWidth": 3,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "NO_CLOCK_SOURCE_STOPPED",
+                  "value": 0,
+                  "description": "No Clock Source (Stopped)"
+                },
+                {
+                  "name": "RUNNING_NO_PRESCALING",
+                  "value": 1,
+                  "description": "Running, No Prescaling"
+                },
+                {
+                  "name": "RUNNING_CLK_8",
+                  "value": 2,
+                  "description": "Running, CLK/8"
+                },
+                {
+                  "name": "RUNNING_CLK_64",
+                  "value": 3,
+                  "description": "Running, CLK/64"
+                },
+                {
+                  "name": "RUNNING_CLK_256",
+                  "value": 4,
+                  "description": "Running, CLK/256"
+                },
+                {
+                  "name": "RUNNING_CLK_1024",
+                  "value": 5,
+                  "description": "Running, CLK/1024"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_FALLING_EDGE",
+                  "value": 6,
+                  "description": "Running, ExtClk Tn Falling Edge"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_RISING_EDGE",
+                  "value": 7,
+                  "description": "Running, ExtClk Tn Rising Edge"
+                }
+              ]
+            },
+            {
+              "name": "WGM1",
+              "description": "Waveform Generation Mode",
+              "bitOffset": 3,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "ICES1",
+              "description": "Input Capture 1 Edge Select",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICNC1",
+              "description": "Input Capture 1 Noise Canceler",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR1C",
+          "description": "Timer/Counter 1 Control Register C",
+          "addressOffset": 76,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "FOC1C",
+              "description": "Force Output Compare 1C",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC1B",
+              "description": "Force Output Compare 1B",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC1A",
+              "description": "Force Output Compare 1A",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCNT1",
+          "description": "Timer/Counter1 Bytes",
+          "addressOffset": 78,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TIFR1",
+          "description": "Timer/Counter1 Interrupt Flag register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOV1",
+              "description": "Timer/Counter1 Overflow Flag",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF1A",
+              "description": "Output Compare Flag 1A",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF1B",
+              "description": "Output Compare Flag 1B",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF1C",
+              "description": "Output Compare Flag 1C",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICF1",
+              "description": "Input Capture Flag 1",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TIMSK1",
+          "description": "Timer/Counter1 Interrupt Mask Register",
+          "addressOffset": 57,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOIE1",
+              "description": "Timer/Counter1 Overflow Interrupt Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE1A",
+              "description": "Timer/Counter1 Output Compare A Match Interrupt Enable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE1B",
+              "description": "Timer/Counter1 Output Compare B Match Interrupt Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE1C",
+              "description": "Timer/Counter1 Output Compare C Match Interrupt Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICIE1",
+              "description": "Timer/Counter1 Input Capture Interrupt Enable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TC3",
+      "description": "Timer/Counter, 16-bit",
+      "baseAddress": 8388664,
+      "registers": [
+        {
+          "name": "ICR3",
+          "description": "Timer/Counter3 Input Capture Register Bytes",
+          "addressOffset": 94,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR3A",
+          "description": "Timer/Counter3 Output Compare Register A Bytes",
+          "addressOffset": 96,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR3B",
+          "description": "Timer/Counter3 Output Compare Register B Bytes",
+          "addressOffset": 98,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR3C",
+          "description": "Timer/Counter3 Output Compare Register B Bytes",
+          "addressOffset": 100,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TCCR3A",
+          "description": "Timer/Counter3 Control Register A",
+          "addressOffset": 88,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "WGM3",
+              "description": "Waveform Generation Mode",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM3C",
+              "description": "Compare Output Mode 3C, bits",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM3B",
+              "description": "Compare Output Mode 3B, bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM3A",
+              "description": "Compare Output Mode 1A, bits",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR3B",
+          "description": "Timer/Counter3 Control Register B",
+          "addressOffset": 89,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CS3",
+              "description": "Prescaler source of Timer/Counter 3",
+              "bitOffset": 0,
+              "bitWidth": 3,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "NO_CLOCK_SOURCE_STOPPED",
+                  "value": 0,
+                  "description": "No Clock Source (Stopped)"
+                },
+                {
+                  "name": "RUNNING_NO_PRESCALING",
+                  "value": 1,
+                  "description": "Running, No Prescaling"
+                },
+                {
+                  "name": "RUNNING_CLK_8",
+                  "value": 2,
+                  "description": "Running, CLK/8"
+                },
+                {
+                  "name": "RUNNING_CLK_64",
+                  "value": 3,
+                  "description": "Running, CLK/64"
+                },
+                {
+                  "name": "RUNNING_CLK_256",
+                  "value": 4,
+                  "description": "Running, CLK/256"
+                },
+                {
+                  "name": "RUNNING_CLK_1024",
+                  "value": 5,
+                  "description": "Running, CLK/1024"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_FALLING_EDGE",
+                  "value": 6,
+                  "description": "Running, ExtClk Tn Falling Edge"
+                },
+                {
+                  "name": "RUNNING_EXTCLK_TN_RISING_EDGE",
+                  "value": 7,
+                  "description": "Running, ExtClk Tn Rising Edge"
+                }
+              ]
+            },
+            {
+              "name": "WGM3",
+              "description": "Waveform Generation Mode",
+              "bitOffset": 3,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "ICES3",
+              "description": "Input Capture 3 Edge Select",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICNC3",
+              "description": "Input Capture 3 Noise Canceler",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR3C",
+          "description": "Timer/Counter 3 Control Register C",
+          "addressOffset": 90,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "FOC3C",
+              "description": "Force Output Compare 3C",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC3B",
+              "description": "Force Output Compare 3B",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC3A",
+              "description": "Force Output Compare 3A",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCNT3",
+          "description": "Timer/Counter3 Bytes",
+          "addressOffset": 92,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TIFR3",
+          "description": "Timer/Counter3 Interrupt Flag register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOV3",
+              "description": "Timer/Counter3 Overflow Flag",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF3A",
+              "description": "Output Compare Flag 3A",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF3B",
+              "description": "Output Compare Flag 3B",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF3C",
+              "description": "Output Compare Flag 3C",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICF3",
+              "description": "Input Capture Flag 3",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TIMSK3",
+          "description": "Timer/Counter3 Interrupt Mask Register",
+          "addressOffset": 57,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOIE3",
+              "description": "Timer/Counter3 Overflow Interrupt Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE3A",
+              "description": "Timer/Counter3 Output Compare A Match Interrupt Enable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE3B",
+              "description": "Timer/Counter3 Output Compare B Match Interrupt Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE3C",
+              "description": "Timer/Counter3 Output Compare C Match Interrupt Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "ICIE3",
+              "description": "Timer/Counter3 Input Capture Interrupt Enable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TC4",
+      "description": "Timer/Counter, 10-bit",
+      "baseAddress": 8388665,
+      "registers": [
+        {
+          "name": "DT4",
+          "description": "Timer/Counter 4 Dead Time Value",
+          "addressOffset": 155,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "DT4L",
+              "description": "Timer/Counter 4 Dead Time Value Bits",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "OCR4A",
+          "description": "Timer/Counter4 Output Compare Register A",
+          "addressOffset": 150,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR4B",
+          "description": "Timer/Counter4 Output Compare Register B",
+          "addressOffset": 151,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR4C",
+          "description": "Timer/Counter4 Output Compare Register C",
+          "addressOffset": 152,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "OCR4D",
+          "description": "Timer/Counter4 Output Compare Register D",
+          "addressOffset": 153,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TC4H",
+          "description": "Timer/Counter4",
+          "addressOffset": 134,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TCCR4A",
+          "description": "Timer/Counter4 Control Register A",
+          "addressOffset": 135,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PWM4B",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PWM4A",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC4B",
+              "description": "Force Output Compare Match 4B",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC4A",
+              "description": "Force Output Compare Match 4A",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4B",
+              "description": "Compare Output Mode 4B, bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4A",
+              "description": "Compare Output Mode 1A, bits",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR4B",
+          "description": "Timer/Counter4 Control Register B",
+          "addressOffset": 136,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CS4",
+              "description": "Clock Select Bits",
+              "bitOffset": 0,
+              "bitWidth": 4,
+              "access": "read-write"
+            },
+            {
+              "name": "DTPS4",
+              "description": "Dead Time Prescaler Bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "PSR4",
+              "description": "Prescaler Reset Timer/Counter 4",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "PWM4X",
+              "description": "PWM Inversion Mode",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR4C",
+          "description": "Timer/Counter 4 Control Register C",
+          "addressOffset": 137,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "PWM4D",
+              "description": "Pulse Width Modulator D Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FOC4D",
+              "description": "Force Output Compare Match 4D",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4D",
+              "description": "Comparator D Output Mode",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4B0S",
+              "description": "Comparator B Output Mode",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4B1S",
+              "description": "Comparator B Output Mode",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4A0S",
+              "description": "Comparator A Output Mode",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "COM4A1S",
+              "description": "Comparator A Output Mode",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR4D",
+          "description": "Timer/Counter 4 Control Register D",
+          "addressOffset": 138,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "WGM4",
+              "description": "Waveform Generation Mode bits",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "FPF4",
+              "description": "Fault Protection Interrupt Flag",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FPAC4",
+              "description": "Fault Protection Analog Comparator Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FPES4",
+              "description": "Fault Protection Edge Select",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FPNC4",
+              "description": "Fault Protection Noise Canceler",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FPEN4",
+              "description": "Fault Protection Mode Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FPIE4",
+              "description": "Fault Protection Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCCR4E",
+          "description": "Timer/Counter 4 Control Register E",
+          "addressOffset": 139,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "OC4OE",
+              "description": "Output Compare Override Enable bit",
+              "bitOffset": 0,
+              "bitWidth": 6,
+              "access": "read-write"
+            },
+            {
+              "name": "ENHC4",
+              "description": "Enhanced Compare/PWM Mode",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TLOCK4",
+              "description": "Register Update Lock",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TCNT4",
+          "description": "Timer/Counter4 Low Bytes",
+          "addressOffset": 133,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TIFR4",
+          "description": "Timer/Counter4 Interrupt Flag register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOV4",
+              "description": "Timer/Counter4 Overflow Flag",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF4B",
+              "description": "Output Compare Flag 4B",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF4A",
+              "description": "Output Compare Flag 4A",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCF4D",
+              "description": "Output Compare Flag 4D",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TIMSK4",
+          "description": "Timer/Counter4 Interrupt Mask Register",
+          "addressOffset": 57,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TOIE4",
+              "description": "Timer/Counter4 Overflow Interrupt Enable",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE4B",
+              "description": "Timer/Counter4 Output Compare B Match Interrupt Enable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE4A",
+              "description": "Timer/Counter4 Output Compare A Match Interrupt Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OCIE4D",
+              "description": "Timer/Counter4 Output Compare D Match Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TWI",
+      "description": "Two Wire Serial Interface",
+      "baseAddress": 8388792,
+      "registers": [
+        {
+          "name": "TWAMR",
+          "description": "TWI (Slave) Address Mask Register",
+          "addressOffset": 5,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TWAM",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 7,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TWAR",
+          "description": "TWI (Slave) Address register",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TWGCE",
+              "description": "TWI General Call Recognition Enable Bit",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWA",
+              "description": "TWI (Slave) Address register Bits",
+              "bitOffset": 1,
+              "bitWidth": 7,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TWBR",
+          "description": "TWI Bit Rate register",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TWCR",
+          "description": "TWI Control Register (read-only for debugger)",
+          "addressOffset": 4,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TWIE",
+              "description": "TWI Interrupt Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWEN",
+              "description": "TWI Enable Bit",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWWC",
+              "description": "TWI Write Collision Flag",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWSTO",
+              "description": "TWI Stop Condition Bit",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWSTA",
+              "description": "TWI Start Condition Bit",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWEA",
+              "description": "TWI Enable Acknowledge Bit",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TWINT",
+              "description": "TWI Interrupt Flag",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "TWDR",
+          "description": "TWI Data register",
+          "addressOffset": 3,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "TWSR",
+          "description": "TWI Status Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TWPS",
+              "description": "TWI Prescaler",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "1",
+                  "value": 0,
+                  "description": "1"
+                },
+                {
+                  "name": "4",
+                  "value": 1,
+                  "description": "4"
+                },
+                {
+                  "name": "16",
+                  "value": 2,
+                  "description": "16"
+                },
+                {
+                  "name": "64",
+                  "value": 3,
+                  "description": "64"
+                }
+              ]
+            },
+            {
+              "name": "TWS",
+              "description": "TWI Status",
+              "bitOffset": 3,
+              "bitWidth": 5,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "USART1",
+      "description": "USART",
+      "baseAddress": 8388808,
+      "registers": [
+        {
+          "name": "UBRR1",
+          "description": "USART Baud Rate Register Bytes",
+          "addressOffset": 4,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UCSR1A",
+          "description": "USART Control and Status Register A (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "MPCM1",
+              "description": "Multi-processor Communication Mode",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "U2X1",
+              "description": "Double the USART transmission speed",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UPE1",
+              "description": "Parity Error",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "DOR1",
+              "description": "Data overRun",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FE1",
+              "description": "Framing Error",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UDRE1",
+              "description": "USART Data Register Empty",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TXC1",
+              "description": "USART Transmit Complete",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXC1",
+              "description": "USART Receive Complete",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UCSR1B",
+          "description": "USART Control and Status Register B",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TXB81",
+              "description": "Transmit Data Bit 8",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXB81",
+              "description": "Receive Data Bit 8",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UCSZ12",
+              "description": "Character Size",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TXEN1",
+              "description": "Transmitter Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXEN1",
+              "description": "Receiver Enable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UDRIE1",
+              "description": "USART Data register Empty Interrupt Enable",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "TXCIE1",
+              "description": "TX Complete Interrupt Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXCIE1",
+              "description": "RX Complete Interrupt Enable",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UCSR1C",
+          "description": "USART Control and Status Register C",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "UCPOL1",
+              "description": "Clock Polarity",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UCSZ1",
+              "description": "Character Size",
+              "bitOffset": 1,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "USBS1",
+              "description": "Stop Bit Select",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "1_BIT",
+                  "value": 0,
+                  "description": "1-bit"
+                },
+                {
+                  "name": "2_BIT",
+                  "value": 1,
+                  "description": "2-bit"
+                }
+              ]
+            },
+            {
+              "name": "UPM1",
+              "description": "Parity Mode Bits",
+              "bitOffset": 4,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "DISABLED",
+                  "value": 0,
+                  "description": "Disabled"
+                },
+                {
+                  "name": "RESERVED",
+                  "value": 1,
+                  "description": "Reserved"
+                },
+                {
+                  "name": "ENABLED_EVEN_PARITY",
+                  "value": 2,
+                  "description": "Enabled, Even Parity"
+                },
+                {
+                  "name": "ENABLED_ODD_PARITY",
+                  "value": 3,
+                  "description": "Enabled, Odd Parity"
+                }
+              ]
+            },
+            {
+              "name": "UMSEL1",
+              "description": "USART Mode Select",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "ASYNCHRONOUS_USART",
+                  "value": 0,
+                  "description": "Asynchronous USART"
+                },
+                {
+                  "name": "SYNCHRONOUS_USART",
+                  "value": 1,
+                  "description": "Synchronous USART"
+                },
+                {
+                  "name": "MASTER_SPI",
+                  "value": 3,
+                  "description": "Master SPI"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "UCSR1D",
+          "description": "USART Control and Status Register D",
+          "addressOffset": 3,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "RTSEN",
+              "description": "RTS Enable",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "CTSEN",
+              "description": "CTS Enable",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UDR1",
+          "description": "USART I/O Data Register (write-only for debugger)",
+          "addressOffset": 6,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        }
+      ]
+    },
+    {
+      "name": "USB_DEVICE",
+      "description": "USB Device Registers",
+      "baseAddress": 8388823,
+      "registers": [
+        {
+          "name": "UDADDR",
+          "description": "No Description.",
+          "addressOffset": 12,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "UADD",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 7,
+              "access": "read-write"
+            },
+            {
+              "name": "ADDEN",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UDCON",
+          "description": "No Description.",
+          "addressOffset": 9,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "DETACH",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RMWKUP",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "LSM",
+              "description": "USB low speed mode",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RSTCPU",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UDFNUM",
+          "description": "No Description.",
+          "addressOffset": 13,
+          "size": 16,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UDIEN",
+          "description": "No Description.",
+          "addressOffset": 11,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SUSPE",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SOFE",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EORSTE",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WAKEUPE",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EORSME",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UPRSME",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UDINT",
+          "description": "No Description.",
+          "addressOffset": 10,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "SUSPI",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SOFI",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EORSTI",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WAKEUPI",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EORSMI",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "UPRSMI",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UDMFN",
+          "description": "No Description.",
+          "addressOffset": 15,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "FNCERR",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UEBCHX",
+          "description": "No Description.",
+          "addressOffset": 28,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UEBCLX",
+          "description": "No Description.",
+          "addressOffset": 27,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UECFG0X",
+          "description": "No Description.",
+          "addressOffset": 21,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EPDIR",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EPTYPE",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 2,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UECFG1X",
+          "description": "No Description.",
+          "addressOffset": 22,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "ALLOC",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "EPBK",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "EPSIZE",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 3,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UECONX",
+          "description": "No Description.",
+          "addressOffset": 20,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EPEN",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RSTDT",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "STALLRQC",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "STALLRQ",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UEDATX",
+          "description": "No Description.",
+          "addressOffset": 26,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "DAT",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 8,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UEIENX",
+          "description": "No Description.",
+          "addressOffset": 25,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TXINE",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "STALLEDE",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXOUTE",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXSTPE",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "NAKOUTE",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "NAKINE",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FLERRE",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UEINT",
+          "description": "No Description.",
+          "addressOffset": 29,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UEINTX",
+          "description": "No Description.",
+          "addressOffset": 17,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "TXINI",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "STALLEDI",
+              "description": "No Description.",
+              "bitOffset": 1,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXOUTI",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RXSTPI",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "NAKOUTI",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "RWAL",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "NAKINI",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FIFOCON",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UENUM",
+          "description": "No Description.",
+          "addressOffset": 18,
+          "size": 8,
+          "access": "read-write",
+          "fields": []
+        },
+        {
+          "name": "UERST",
+          "description": "No Description.",
+          "addressOffset": 19,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "EPRST",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 7,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UESTA0X",
+          "description": "No Description.",
+          "addressOffset": 23,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "NBUSYBK",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "DTSEQ",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "UNDERFI",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OVERFI",
+              "description": "No Description.",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "CFGOK",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UESTA1X",
+          "description": "No Description.",
+          "addressOffset": 24,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "CURRBK",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 2,
+              "access": "read-write"
+            },
+            {
+              "name": "CTRLDIR",
+              "description": "No Description.",
+              "bitOffset": 2,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "UHWCON",
+          "description": "No Description.",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "UVREGE",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "USBCON",
+          "description": "USB General Control Register",
+          "addressOffset": 1,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "VBUSTE",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "OTGPADE",
+              "description": "No Description.",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "FRZCLK",
+              "description": "No Description.",
+              "bitOffset": 5,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "USBE",
+              "description": "No Description.",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "USBINT",
+          "description": "No Description.",
+          "addressOffset": 3,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "VBUSTI",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        },
+        {
+          "name": "USBSTA",
+          "description": "No Description.",
+          "addressOffset": 2,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "VBUS",
+              "description": "No Description.",
+              "bitOffset": 0,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "SPEED",
+              "description": "No Description.",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WDT",
+      "description": "Watchdog Timer",
+      "baseAddress": 8388704,
+      "registers": [
+        {
+          "name": "WDTCSR",
+          "description": "Watchdog Timer Control Register (read-only for debugger)",
+          "addressOffset": 0,
+          "size": 8,
+          "access": "read-write",
+          "fields": [
+            {
+              "name": "WDP",
+              "description": "Watchdog Timer Prescaler Bits",
+              "bitOffset": 0,
+              "bitWidth": 6,
+              "access": "read-write",
+              "enumeratedValues": [
+                {
+                  "name": "OSCILLATOR_CYCLES_2K",
+                  "value": 0,
+                  "description": "Oscillator Cycles 2K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_4K",
+                  "value": 1,
+                  "description": "Oscillator Cycles 4K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_8K",
+                  "value": 2,
+                  "description": "Oscillator Cycles 8K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_16K",
+                  "value": 3,
+                  "description": "Oscillator Cycles 16K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_32K",
+                  "value": 4,
+                  "description": "Oscillator Cycles 32K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_64K",
+                  "value": 5,
+                  "description": "Oscillator Cycles 64K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_128K",
+                  "value": 6,
+                  "description": "Oscillator Cycles 128K"
+                },
+                {
+                  "name": "OSCILLATOR_CYCLES_256K",
+                  "value": 7,
+                  "description": "Oscillator Cycles 256K"
+                }
+              ]
+            },
+            {
+              "name": "WDE",
+              "description": "Watch Dog Enable",
+              "bitOffset": 3,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WDCE",
+              "description": "Watchdog Change Enable",
+              "bitOffset": 4,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WDIE",
+              "description": "Watchdog Timeout Interrupt Enable",
+              "bitOffset": 6,
+              "bitWidth": 1,
+              "access": "read-write"
+            },
+            {
+              "name": "WDIF",
+              "description": "Watchdog Timeout Interrupt Flag",
+              "bitOffset": 7,
+              "bitWidth": 1,
+              "access": "read-write"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

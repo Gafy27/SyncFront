@@ -8,7 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AgentChatPanel } from "@/components/agent-chat-panel";
-import { Bot } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { OrganizationProvider } from "@/providers/organization-provider";
 import LoginPage from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
@@ -25,6 +25,7 @@ import WorkflowRuns from "@/pages/workflow-runs";
 import WorkflowRunDetail from "@/pages/workflow-run-detail";
 import SqlEditorPage from "@/pages/sql-editor";
 import MetadataPage from "@/pages/metadata";
+import SpacesPage from "@/pages/spaces";
 
 function Router() {
   return (
@@ -44,6 +45,7 @@ function Router() {
       <Route path="/workflow/:id" component={WorkflowDetail} />
       <Route path="/sql-editor" component={SqlEditorPage} />
       <Route path="/metadata" component={MetadataPage} />
+      <Route path="/spaces" component={SpacesPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -93,7 +95,7 @@ function App() {
                       className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       title="Toggle Agent"
                     >
-                      <Bot className="h-3.5 w-3.5" />
+                      <Sparkles className="h-3.5 w-3.5" />
                     </button>
                     <ThemeToggle />
                   </div>

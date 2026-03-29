@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { events as eventsApi } from "@/lib/api";
 import { useOrganization } from "@/providers/organization-provider";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -236,20 +236,25 @@ export default function EventsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: events = [], isLoading } = useQuery<OrgEvent[]>({
+  const { data: eventsRaw, isLoading } = useQuery({
     queryKey: ["organizations", selectedOrg, "events"],
-    queryFn: async () => {
-      const res = await eventsApi.list(selectedOrg!);
-      if (Array.isArray(res)) return res;
-      if (res && typeof res === "object") {
-        const o = res as Record<string, unknown>;
-        const key = Object.keys(o).find((k) => Array.isArray(o[k]));
-        if (key) return o[key] as OrgEvent[];
-      }
-      return [];
-    },
+    queryFn: () => eventsApi.list(selectedOrg!),
     enabled: !!selectedOrg,
   });
+
+  const events = useMemo(() => {
+    if (!eventsRaw) return [];
+    if (Array.isArray(eventsRaw)) return eventsRaw;
+    if (typeof eventsRaw === "object") {
+      const obj = eventsRaw as any;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.events)) return obj.events;
+      // Fallback
+      const key = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+      if (key) return obj[key];
+    }
+    return [];
+  }, [eventsRaw]);
 
   const deleteEvent = useMutation({
     mutationFn: (eventId: string) => eventsApi.delete(selectedOrg!, eventId),

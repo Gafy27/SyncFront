@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Play, Loader2, AlertCircle, Download, Save, Database as DatabaseIcon, Cable } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SqlEditor } from "@/components/SqlEditor";
@@ -6,6 +6,7 @@ import { executeQuery, metadata as metadataApi, bridges as bridgesApi } from "@/
 import { useOrganization } from "@/providers/organization-provider";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -69,33 +70,36 @@ export default function SqlEditorPage() {
     ["postgresql", "timescaledb", "supabase"].includes(b.type?.toLowerCase() || "")
   );
 
-  // Set default bridge if none selected
-  if (!selectedBridge && sqlBridges.length > 0) {
-    setSelectedBridge(sqlBridges[0].id);
-  }
+  const defaultBridgeName = sqlBridges[0]?.name ?? "";
+
+  // Reset bridge selection when org changes.
+  useEffect(() => {
+    setSelectedBridge("");
+  }, [selectedOrg]);
+
+  // Set default bridge if none selected.
+  useEffect(() => {
+    if (!selectedBridge && defaultBridgeName) setSelectedBridge(defaultBridgeName);
+  }, [selectedBridge, defaultBridgeName]);
 
   // Metadata Save States
   const [isDataToMetadataOpen, setIsDataToMetadataOpen] = useState(false);
-  const [selectedMetaTable, setSelectedMetaTable] = useState<string>("");
+  const [metaTableName, setMetaTableName] = useState<string>("");
   const [isSavingMeta, setIsSavingMeta] = useState(false);
 
-  const { data: metaTables } = useQuery({
-    queryKey: ["metadata", selectedOrg, "tables"],
-    queryFn: () => metadataApi.listTables(selectedOrg!),
-    enabled: !!selectedOrg && isDataToMetadataOpen,
-  });
-
   const handleSaveToMetadata = async () => {
-    if (!selectedMetaTable || rows.length === 0 || !selectedOrg) return;
+    const tableName = metaTableName.trim();
+    if (!tableName || rows.length === 0 || !selectedOrg) return;
     setIsSavingMeta(true);
     try {
       const records = rows.map(r => ({ data: r }));
-      await metadataApi.bulkCreateRecords(selectedOrg, selectedMetaTable, records);
+      await metadataApi.bulkCreateRecords(selectedOrg, tableName, records);
       toast({
         title: "Éxito",
-        description: `${rows.length} registros guardados en la tabla ${selectedMetaTable}`,
+        description: `${rows.length} registros guardados en la tabla ${tableName}`,
       });
       setIsDataToMetadataOpen(false);
+      setMetaTableName("");
     } catch (err) {
       toast({
         title: "Error",
@@ -169,7 +173,7 @@ export default function SqlEditorPage() {
                 </div>
               ) : (
                 sqlBridges.map((b) => (
-                  <SelectItem key={b.id} value={b.id} className="text-xs">
+                  <SelectItem key={b.id} value={b.name} className="text-xs">
                     <div className="flex items-center gap-2">
                       <Cable className="h-3 w-3 text-muted-foreground/60" />
                       <span>{b.name}</span>
@@ -326,22 +330,15 @@ export default function SqlEditorPage() {
           <DialogHeader>
             <DialogTitle>Guardar en Metadatos</DialogTitle>
             <DialogDescription>
-              Seleccione la tabla de destino para guardar los {rows.length} resultados de la consulta.
+              Escriba el nombre de la tabla de destino para guardar los {rows.length} resultados de la consulta.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Select onValueChange={setSelectedMetaTable} value={selectedMetaTable}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar tabla de metadatos" />
-              </SelectTrigger>
-              <SelectContent>
-                {metaTables?.items.map((table) => (
-                  <SelectItem key={table.name} value={table.name}>
-                    {table.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input
+              value={metaTableName}
+              onChange={(e) => setMetaTableName(e.target.value)}
+              placeholder="ej: query_results"
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDataToMetadataOpen(false)}>
@@ -349,7 +346,7 @@ export default function SqlEditorPage() {
             </Button>
             <Button
               onClick={handleSaveToMetadata}
-              disabled={!selectedMetaTable || isSavingMeta}
+              disabled={!metaTableName.trim() || isSavingMeta}
             >
               {isSavingMeta && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Importar {rows.length} registros

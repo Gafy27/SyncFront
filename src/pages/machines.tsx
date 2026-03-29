@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrganization } from "@/providers/organization-provider";
 import { machines as machinesApi } from "@/lib/api";
@@ -14,20 +15,25 @@ export default function MachinesPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: machineList = [] } = useQuery<Machine[]>({
+  const { data: machinesRaw } = useQuery({
     queryKey: ["organizations", selectedOrg, "machines"],
-    queryFn: async () => {
-      const res = await machinesApi.list(selectedOrg!);
-      if (Array.isArray(res)) return res;
-      if (res && typeof res === "object") {
-        const o = res as Record<string, unknown>;
-        const key = Object.keys(o).find((k) => Array.isArray(o[k]));
-        if (key) return o[key] as Machine[];
-      }
-      return [];
-    },
+    queryFn: () => machinesApi.list(selectedOrg!),
     enabled: !!selectedOrg,
   });
+
+  const machineList = useMemo(() => {
+    if (!machinesRaw) return [];
+    if (Array.isArray(machinesRaw)) return machinesRaw;
+    if (typeof machinesRaw === "object") {
+      const obj = machinesRaw as any;
+      if (Array.isArray(obj.items)) return obj.items;
+      if (Array.isArray(obj.machines)) return obj.machines;
+      // Fallback
+      const key = Object.keys(obj).find((k) => Array.isArray(obj[k]));
+      if (key) return obj[key];
+    }
+    return [];
+  }, [machinesRaw]);
 
   const deleteMachine = useMutation({
     mutationFn: (machineId: string) => machinesApi.delete(selectedOrg!, machineId),

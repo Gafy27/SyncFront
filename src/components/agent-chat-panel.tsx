@@ -1,74 +1,62 @@
-import { useEffect, useRef, useState, KeyboardEvent } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo, KeyboardEvent } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import {
   X,
   Send,
-  RotateCcw,
+  ArrowLeft,
   ChevronDown,
   ChevronRight,
   Wrench,
   CheckCircle,
   XCircle,
   Loader2,
-  Sparkles,
-  ArrowLeft,
   MessageSquare,
   Plus,
+  Cable,
+  MoreHorizontal,
 } from "lucide-react"
 import { format as formatSQL } from "sql-formatter"
 import { useAgentChat } from "@/hooks/use-agent-chat"
 import { useOrganization } from "@/providers/organization-provider"
 import { AgentMessage, PendingToolData } from "@/lib/agent-api"
+import { bridges as bridgesApi, spaces as spacesApi } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
-
-// ─── Reasoning block ─────────────────────────────────────────────────────────
-
-function ReasoningBlock({ text }: { text: string }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="mt-2 rounded-lg border border-border/50 bg-muted/30 overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <Sparkles className="h-3 w-3 shrink-0 text-primary/60" />
-        <span className="font-medium">Reasoning</span>
-        {open ? (
-          <ChevronDown className="h-3 w-3 ml-auto" />
-        ) : (
-          <ChevronRight className="h-3 w-3 ml-auto" />
-        )}
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <p className="px-3 pb-3 text-xs text-muted-foreground italic leading-relaxed">
-              {text}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
+import { useQuery } from "@tanstack/react-query"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // ─── Tool group ───────────────────────────────────────────────────────────────
 
 function ToolGroup({ messages, isThinking }: { messages: AgentMessage[]; isThinking?: boolean }) {
   const [open, setOpen] = useState(isThinking ?? false)
-  const count = messages.length
 
-  // Use a Set to show unique tools if they are repeated consecutively, or just show them all
-  // Here we'll show them all as steps
-  const tools = messages.filter(m => !!m.tool_name)
+  const tools: AgentMessage[] = []
+  let pendingReasoning: string | undefined
+
+  for (const m of messages) {
+    if (m.role === "reasoning" && m.content?.trim()) {
+      pendingReasoning = m.content
+      continue
+    }
+
+    if ((m.role === "tool" || m.role === "tool_call") && m.tool_name) {
+      tools.push({
+        ...m,
+        reasoning: m.reasoning ?? pendingReasoning,
+      })
+      pendingReasoning = undefined
+    }
+  }
+
+  const count = tools.length
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-1">
@@ -114,13 +102,17 @@ function ToolGroup({ messages, isThinking }: { messages: AgentMessage[]; isThink
           >
             <div className="mt-2 pl-2.5 space-y-1.5 border-l border-border/30 ml-1.5">
               {tools.map((m, i) => (
-                <div key={i} className="flex items-center gap-2 group/tool">
-                  <div className="h-1 w-1 rounded-full bg-muted-foreground/30 group-hover/tool:bg-primary/50 transition-colors" />
-                  <span className="text-[11px] text-muted-foreground/50 group-hover/tool:text-muted-foreground/80 transition-colors font-mono">
-                    {m.tool_name}
-                  </span>
-                  {m.role === "tool_result" && (
-                    <CheckCircle className="h-2.5 w-2.5 text-green-500/40" />
+                <div key={i} className="space-y-1 group/tool">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/30 group-hover/tool:bg-primary/50 transition-colors" />
+                    <span className="text-[11px] text-muted-foreground/50 group-hover/tool:text-muted-foreground/80 transition-colors font-mono">
+                      {m.tool_name}
+                    </span>
+                  </div>
+                  {m.reasoning && (
+                    <p className="pl-3 text-[11px] text-muted-foreground/55 leading-relaxed">
+                      {m.reasoning}
+                    </p>
                   )}
                 </div>
               ))}
@@ -149,6 +141,11 @@ function tryFormatSQL(sql: string): string {
   } catch {
     return sql
   }
+}
+
+function extractCodeText(children: React.ReactNode): string {
+  if (Array.isArray(children)) return children.map((c) => String(c)).join("")
+  return String(children ?? "")
 }
 
 function ParamValue({ paramKey, value }: { paramKey: string; value: unknown }) {
@@ -198,6 +195,15 @@ function HITLCard({
           </p>
         </div>
       </div>
+
+      {tool.reasoning && (
+        <div className="px-4 py-3 border-b border-border/60">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground/50 mb-1.5">
+            Reasoning
+          </p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{tool.reasoning}</p>
+        </div>
+      )}
 
       {/* Parameters */}
       {Object.keys(params).length > 0 && (
@@ -280,6 +286,12 @@ function MessageBubble({ message }: { message: AgentMessage }) {
   }
 
   if (message.role === "assistant") {
+    const msgLanguage = ((message as AgentMessage & { language?: string }).language || "").toLowerCase()
+    const hasExplicitLanguage = !!msgLanguage
+    const assistantContent = hasExplicitLanguage
+      ? `\`\`\`${msgLanguage}\n${message.content ?? ""}\n\`\`\``
+      : (message.content ?? "")
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 6 }}
@@ -287,7 +299,6 @@ function MessageBubble({ message }: { message: AgentMessage }) {
         className="flex items-start"
       >
         <div className="flex-1 min-w-0">
-          {message.reasoning && <ReasoningBlock text={message.reasoning} />}
           {message.content && (
             <div className="text-sm text-foreground leading-relaxed mt-1 agent-markdown">
               <ReactMarkdown
@@ -316,9 +327,12 @@ function MessageBubble({ message }: { message: AgentMessage }) {
                   ),
                   code: ({ children, className }) => {
                     const isBlock = className?.includes("language-")
+                    const language = className?.replace("language-", "").toLowerCase()
+                    const raw = extractCodeText(children)
+                    const rendered = language === "sql" ? tryFormatSQL(raw) : raw
                     return isBlock ? (
                       <pre className="my-2 rounded-lg bg-muted/50 border border-border/40 px-3 py-2.5 text-[11px] font-mono text-foreground/80 overflow-x-auto leading-relaxed whitespace-pre [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-                        <code>{children}</code>
+                        <code>{rendered}</code>
                       </pre>
                     ) : (
                       <code className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-mono text-foreground/80">
@@ -343,7 +357,7 @@ function MessageBubble({ message }: { message: AgentMessage }) {
                   ),
                 }}
               >
-                {message.content}
+                {assistantContent}
               </ReactMarkdown>
             </div>
           )}
@@ -373,73 +387,7 @@ function stripMarkdown(text: string) {
   return text.replace(/\*\*|__|##|#|\*/g, "").trim()
 }
 
-function SessionsView({
-  onNew,
-  onResume,
-  isStarting,
-  listSessions,
-}: {
-  onNew: () => void
-  onResume: (id: string) => void
-  isStarting: boolean
-  listSessions: () => Promise<StoredSession[]>
-}) {
-  const [sessions, setSessions] = useState<StoredSession[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    listSessions().then((s) => { setSessions(s); setLoading(false) })
-  }, [listSessions])
-
-  return (
-    <div className="flex flex-1 flex-col overflow-hidden">
-      {/* Header row */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/40">
-        <span className="text-sm font-medium text-foreground">Chats</span>
-        <button
-          onClick={onNew}
-          disabled={isStarting}
-          title="New conversation"
-          className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        >
-          {isStarting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-        </button>
-      </div>
-
-      {/* List */}
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/40" />
-          </div>
-        ) : sessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-1.5">
-            <p className="text-sm text-muted-foreground">No conversations yet</p>
-            <p className="text-xs text-muted-foreground/50">Press + to start one</p>
-          </div>
-        ) : (
-          <div className="py-1">
-            {[...sessions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).map((s) => (
-              <button
-                key={s.session_id}
-                onClick={() => onResume(s.session_id)}
-                className="w-full flex items-center gap-2.5 px-4 py-2 text-left hover:bg-muted/40 transition-colors group"
-              >
-                <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
-                <span className="flex-1 min-w-0 text-sm text-foreground/80 truncate">
-                  {stripMarkdown(s.session_summary) || "Conversation"}
-                </span>
-                <span className="text-[11px] text-muted-foreground/40 shrink-0">
-                  {s.updated_at ? formatDate(s.updated_at) : ""}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
+const SESSIONS_PREVIEW = 5
 
 // ─── Input area ───────────────────────────────────────────────────────────────
 
@@ -523,35 +471,101 @@ interface AgentChatPanelProps {
   onClose: () => void
 }
 
+function spaceListKey(s: { id: string; space_id?: string }): string {
+  return String(s.space_id ?? s.id)
+}
+
+function spaceDisplayName(s: { name: string; space_name?: string }): string {
+  return String(s.name ?? s.space_name ?? "").trim()
+}
+
 export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
-  const { selectedOrg, organizations } = useOrganization()
-  const chat = useAgentChat(selectedOrg)
+  const { selectedOrg } = useOrganization()
+  const [selectedBridge, setSelectedBridge] = useState<string>("")
+  /** Internal list key (id); API start uses resolved display name only, never this value. */
+  const [selectedSpaceKey, setSelectedSpaceKey] = useState<string>("__none__")
+  const [sessions, setSessions] = useState<StoredSession[]>([])
+  const [showAllSessions, setShowAllSessions] = useState(false)
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
+
+  const { data: orgBridges } = useQuery({
+    queryKey: ["organizations", selectedOrg, "bridges"],
+    queryFn: () => bridgesApi.list(selectedOrg!),
+    enabled: !!selectedOrg,
+  })
+  const sqlBridges = (orgBridges?.items ?? []).filter(b =>
+    ["postgresql", "timescaledb", "supabase"].includes(b.type?.toLowerCase() || "")
+  )
+
+  const { data: orgSpaces } = useQuery({
+    queryKey: ["organizations", selectedOrg, "spaces"],
+    queryFn: () => spacesApi.list(selectedOrg!),
+    enabled: !!selectedOrg,
+  })
+  const availableSpaces = orgSpaces?.items ?? []
+
+  useEffect(() => {
+    setSelectedSpaceKey("__none__")
+  }, [selectedOrg])
+
+  const selectedSpaceNameForApi = useMemo(() => {
+    if (selectedSpaceKey === "__none__") return undefined
+    const sp = availableSpaces.find((s) => spaceListKey(s) === String(selectedSpaceKey))
+    const n = sp ? spaceDisplayName(sp) : ""
+    return n || undefined
+  }, [availableSpaces, selectedSpaceKey])
+
+  const chat = useAgentChat(
+    selectedOrg,
+    "user",
+    selectedBridge || undefined,
+    selectedSpaceNameForApi
+  )
   const scrollRef = useRef<HTMLDivElement>(null)
   const widthRef = useRef<number>(
     parseInt(localStorage.getItem("agent_panel_width") ?? String(DEFAULT_WIDTH))
   )
   const [panelWidth, setPanelWidth] = useState(widthRef.current)
-  // "sessions" = list view, "chat" = active conversation
-  const [view, setView] = useState<"sessions" | "chat">(chat.isInChat ? "chat" : "sessions")
 
-  const org = organizations.find((o) => String(o.id) === selectedOrg)
+  const loadSessions = useCallback(async () => {
+    const s = await chat.listSessions()
+    setSessions([...s].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()))
+  }, [chat.listSessions])
 
-  // Switch to chat view whenever sessionId changes to a new value
+  // Load sessions when panel opens
   useEffect(() => {
-    if (chat.isInChat) setView("chat")
-  }, [chat.isInChat])
+    if (open) loadSessions()
+  }, [open, loadSessions])
 
-  // Auto-scroll to bottom on new messages or loading state
+  // Track active session from chat hook
+  useEffect(() => {
+    if (chat.sessionId) setActiveSessionId(chat.sessionId)
+  }, [chat.sessionId])
+
+  // Auto-scroll on new messages
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [chat.messages, chat.isWaiting, chat.pendingTool])
 
+  const handleNew = useCallback(() => {
+    chat.endSession()
+    setActiveSessionId(null)
+    loadSessions()
+  }, [chat.endSession, loadSessions])
+
+  const handleResume = useCallback((id: string) => {
+    setActiveSessionId(id)
+    chat.resumeSession(id)
+  }, [chat.resumeSession])
+
+  const visibleSessions = showAllSessions ? sessions : sessions.slice(0, SESSIONS_PREVIEW)
+  const hasMore = sessions.length > SESSIONS_PREVIEW
+
   const startResize = (e: React.MouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
     const startWidth = widthRef.current
-
     const onMove = (e: MouseEvent) => {
       const next = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidth - (e.clientX - startX)))
       widthRef.current = next
@@ -582,12 +596,13 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
             onMouseDown={startResize}
             className="absolute left-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/40 active:bg-primary/60 transition-colors z-10"
           />
+
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/40 px-3 py-2">
+          <div className="flex items-center justify-between border-b border-border/40 px-3 py-2 shrink-0">
             <div className="flex items-center gap-1">
-              {view === "chat" && (
+              {chat.isInChat && (
                 <button
-                  onClick={() => setView("sessions")}
+                  onClick={handleNew}
                   title="Back to chats"
                   className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 >
@@ -596,15 +611,38 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
               )}
               <span className="text-sm font-medium text-foreground px-1">Agent</span>
             </div>
-            <div className="flex items-center gap-0.5">
-              {view === "chat" && chat.isInChat && (
-                <button
-                  onClick={() => { chat.endSession(); setView("sessions") }}
-                  title="New conversation"
-                  className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" />
-                </button>
+            <div className="flex items-center gap-1.5">
+              {availableSpaces.length > 0 && (
+                <Select value={selectedSpaceKey} onValueChange={setSelectedSpaceKey}>
+                  <SelectTrigger className="h-6 text-[11px] border-border/50 bg-muted/40 gap-1 px-2 w-auto max-w-[140px]">
+                    <SelectValue placeholder="Space..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__" className="text-xs">
+                      No space
+                    </SelectItem>
+                    {availableSpaces.map((space) => (
+                      <SelectItem key={spaceListKey(space)} value={spaceListKey(space)} className="text-xs">
+                        {spaceDisplayName(space) || spaceListKey(space)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {sqlBridges.length > 0 && (
+                <Select value={selectedBridge} onValueChange={setSelectedBridge}>
+                  <SelectTrigger className="h-6 text-[11px] border-border/50 bg-muted/40 gap-1 px-2 w-auto max-w-[130px]">
+                    <Cable className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+                    <SelectValue placeholder="Bridge..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sqlBridges.map((b) => (
+                      <SelectItem key={b.id} value={b.name} className="text-xs">
+                        {b.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
               <button
                 onClick={onClose}
@@ -615,33 +653,84 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
             </div>
           </div>
 
-          {/* Body */}
-          {view === "sessions" ? (
-            <SessionsView
-              onNew={() => { chat.startSession() }}
-              onResume={(id) => { chat.resumeSession(id) }}
-              isStarting={chat.isStarting}
-              listSessions={chat.listSessions}
-            />
-          ) : (
-            <>
-              {/* Messages */}
-              <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto px-4 py-4 space-y-4 no-scrollbar"
+          {/* Sessions list — only shown when no active chat */}
+          {!chat.isInChat && <div className="shrink-0 border-b border-border/40">
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="text-xs font-medium text-muted-foreground">Chats</span>
+              <button
+                onClick={handleNew}
+                disabled={chat.isStarting}
+                title="New conversation"
+                className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
+                {chat.isStarting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+              </button>
+            </div>
+
+            {sessions.length === 0 ? (
+              <p className="px-4 pb-3 text-xs text-muted-foreground/50">No conversations yet</p>
+            ) : (
+              <div className="pb-1">
+                {visibleSessions.map((s) => (
+                  <button
+                    key={s.session_id}
+                    onClick={() => handleResume(s.session_id)}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-4 py-1.5 text-left transition-colors group",
+                      activeSessionId === s.session_id
+                        ? "bg-muted/60 text-foreground"
+                        : "hover:bg-muted/30 text-foreground/70"
+                    )}
+                  >
+                    <MessageSquare className="h-3 w-3 shrink-0 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                    <span className="flex-1 min-w-0 text-xs truncate">
+                      {chat.getSessionTitles()[s.session_id] || stripMarkdown(s.session_summary) || "Conversation"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/40 shrink-0">
+                      {s.updated_at ? formatDate(s.updated_at) : ""}
+                    </span>
+                  </button>
+                ))}
+                {hasMore && (
+                  <button
+                    onClick={() => setShowAllSessions((v) => !v)}
+                    className="flex items-center gap-1.5 px-4 py-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  >
+                    <MoreHorizontal className="h-3 w-3" />
+                    {showAllSessions ? "Show less" : `${sessions.length - SESSIONS_PREVIEW} more`}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>}
+
+          {/* Messages */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-4 py-4 space-y-4 no-scrollbar"
+          >
+            {chat.isInChat ? (
+              <>
                 {(() => {
-                  const isTool = (r: string) => r === "tool" || r === "tool_call" || r === "tool_result"
+                  const isTool = (r: string) => r === "tool" || r === "tool_call" || r === "tool_result" || r === "reasoning"
+                  const isEmpty = (m: AgentMessage) => !m.content?.trim() && !m.reasoning
                   const msgs = chat.messages
-                  const trailingToolsEnd = msgs.length > 0 && isTool(msgs[msgs.length - 1].role)
+                  const lastRole = msgs.length > 0 ? msgs[msgs.length - 1].role : ""
+                  const trailingToolsEnd = isTool(lastRole) || (lastRole === "assistant" && isEmpty(msgs[msgs.length - 1]))
                   const groups: JSX.Element[] = []
                   let i = 0
                   while (i < msgs.length) {
                     if (isTool(msgs[i].role)) {
                       const toolMsgs: AgentMessage[] = []
                       const start = i
-                      while (i < msgs.length && isTool(msgs[i].role)) {
-                        toolMsgs.push(msgs[i++])
+                      while (i < msgs.length) {
+                        if (isTool(msgs[i].role)) {
+                          toolMsgs.push(msgs[i++])
+                        } else if (msgs[i].role === "assistant" && isEmpty(msgs[i])) {
+                          i++
+                        } else {
+                          break
+                        }
                       }
                       const isLast = i >= msgs.length
                       groups.push(
@@ -651,6 +740,8 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
                           isThinking={chat.isWaiting && isLast && trailingToolsEnd}
                         />
                       )
+                    } else if (msgs[i].role === "assistant" && isEmpty(msgs[i])) {
+                      i++
                     } else if (msgs[i].role === "user" || msgs[i].role === "assistant") {
                       groups.push(<MessageBubble key={i} message={msgs[i++]} />)
                     } else {
@@ -660,14 +751,12 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
                   return groups
                 })()}
 
-                {/* Standalone thinking — only when last message is not a tool */}
                 <AnimatePresence>
-                  {chat.isWaiting && (chat.messages.length === 0 || !["tool", "tool_call", "tool_result"].includes(chat.messages[chat.messages.length - 1].role)) && (
+                  {chat.isWaiting && (chat.messages.length === 0 || !["tool", "tool_call", "tool_result", "reasoning"].includes(chat.messages[chat.messages.length - 1].role)) && (
                     <ThinkingIndicator key="thinking" />
                   )}
                 </AnimatePresence>
 
-                {/* HITL */}
                 <AnimatePresence>
                   {chat.pendingTool && (
                     <HITLCard
@@ -678,21 +767,25 @@ export function AgentChatPanel({ open, onClose }: AgentChatPanelProps) {
                   )}
                 </AnimatePresence>
 
-                {/* Error */}
                 {chat.error && (
                   <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-xs text-rose-400">
                     {chat.error}
                   </div>
                 )}
+              </>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                <MessageSquare className="h-8 w-8 text-muted-foreground/20" />
+                <p className="text-sm text-muted-foreground/50">Select a chat or start a new one</p>
               </div>
+            )}
+          </div>
 
-              {/* Input */}
-              <ChatInput
-                onSend={chat.sendMessage}
-                disabled={!!chat.pendingTool}
-              />
-            </>
-          )}
+          {/* Input */}
+          <ChatInput
+            onSend={chat.sendMessage}
+            disabled={!!chat.pendingTool}
+          />
         </motion.div>
       )}
     </AnimatePresence>
